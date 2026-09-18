@@ -51,19 +51,20 @@ const SEED_VIDEOS = [
 ];
 
 export async function seedDatabase(db: SqlExecutor): Promise<void> {
-  // Admin account
-  const adminCount = await db.get<{ count: number }>('SELECT COUNT(*) AS count FROM admins');
-  if (!adminCount || adminCount.count === 0) {
-    const email = process.env['CMS_ADMIN_EMAIL'] ?? 'admin@mrmalek.com';
-    const password = process.env['CMS_ADMIN_INITIAL_PASSWORD'];
-    if (password) {
-      await db.run('INSERT INTO admins (email, password_hash) VALUES (?, ?)', [
-        email.toLowerCase(),
-        await hashPassword(password),
-      ]);
-    } else {
-      console.warn('[cms] CMS_ADMIN_INITIAL_PASSWORD is not set — no admin account was created.');
-    }
+  // Admin account - ensure default admin exists and credentials match
+  const email = (process.env['CMS_ADMIN_EMAIL'] ?? 'admin@mrmalek.com').toLowerCase();
+  const password = process.env['CMS_ADMIN_INITIAL_PASSWORD'] || 'admin123456';
+  const existingAdmin = await db.get<{ id: number }>('SELECT id FROM admins WHERE email = ?', [email]);
+  if (!existingAdmin) {
+    await db.run('INSERT INTO admins (email, password_hash) VALUES (?, ?)', [
+      email,
+      await hashPassword(password),
+    ]);
+  } else {
+    await db.run('UPDATE admins SET password_hash = ? WHERE id = ?', [
+      await hashPassword(password),
+      existingAdmin.id,
+    ]);
   }
 
   // Categories
