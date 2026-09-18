@@ -50,7 +50,7 @@ export async function saveUploadedFile(input: UploadFileInput): Promise<UploadFi
     const prefix = isDoc ? 'doc' : 'img';
     const fileName = `${prefix}-${md5Hash}.${ext}`;
 
-    const uploadDir = path.join(process.cwd(), 'public/uploads');
+    const uploadDir = process.env['CMS_UPLOADS_PATH'] || path.join(process.cwd(), 'public/uploads');
 
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
@@ -58,6 +58,17 @@ export async function saveUploadedFile(input: UploadFileInput): Promise<UploadFi
 
     const filePath = path.join(uploadDir, fileName);
     fs.writeFileSync(filePath, buffer);
+
+    // Also mirror to .output/public/uploads if building/running from .output
+    const outputUploadsDir = path.join(process.cwd(), '.output/public/uploads');
+    if (fs.existsSync(path.join(process.cwd(), '.output/public'))) {
+      try {
+        if (!fs.existsSync(outputUploadsDir)) fs.mkdirSync(outputUploadsDir, { recursive: true });
+        fs.writeFileSync(path.join(outputUploadsDir, fileName), buffer);
+      } catch {
+        // ignore
+      }
+    }
 
     const publicUrl = `/uploads/${fileName}`;
 

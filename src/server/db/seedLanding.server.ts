@@ -143,7 +143,7 @@ export async function seedLandingContent(db: SqlExecutor): Promise<void> {
     site_description:
       'Portfolio of Malek Hussein — Technical Product Leader based in Ottawa, Canada. Leading complex digital products across SaaS, e-commerce, fintech, and enterprise platforms.',
     brand_name: 'Mr. Malek',
-    site_logo: '/images/companies/aslagrodrain.png',
+    site_logo: '/images/malek-logo.png',
     site_favicon: '/favicon.ico',
     cv_url: '/cv-malek-hussein.pdf',
     contact_email: 'contact@mrmalek.com',
@@ -158,5 +158,15 @@ export async function seedLandingContent(db: SqlExecutor): Promise<void> {
 
   for (const [key, val] of Object.entries(defaultSettings)) {
     await db.run('INSERT OR IGNORE INTO site_settings (key, value) VALUES (?, ?)', [key, val]);
+  }
+
+  // Self-heal: If site_logo in database was previously set to the partner company logo, fix to official logo
+  const currentLogo = await db.get<{ value: string }>('SELECT value FROM site_settings WHERE key = ?', ['site_logo']);
+  if (!currentLogo || currentLogo.value === '/images/companies/aslagrodrain.png' || !currentLogo.value) {
+    await db.run('INSERT INTO site_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = ?', [
+      'site_logo',
+      '/images/malek-logo.png',
+      '/images/malek-logo.png',
+    ]);
   }
 }

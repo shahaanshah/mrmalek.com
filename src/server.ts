@@ -1,7 +1,57 @@
 import "./lib/error-capture";
+import fs from "node:fs";
+import path from "node:path";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+
+const UPLOAD_MIME_TYPES: Record<string, string> = {
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+  ".gif": "image/gif",
+  ".ico": "image/x-icon",
+  ".pdf": "application/pdf",
+  ".txt": "text/plain",
+  ".mp4": "video/mp4",
+};
+
+function serveUploadedFile(pathname: string): Response | null {
+  const fileName = path.basename(decodeURIComponent(pathname));
+  if (!fileName || fileName.startsWith(".")) return null;
+
+  const searchDirs = [
+    process.env["CMS_UPLOADS_PATH"],
+    path.join(process.cwd(), "public/uploads"),
+    path.join(process.cwd(), ".output/public/uploads"),
+  ].filter(Boolean) as string[];
+
+  for (const dir of searchDirs) {
+    const fullPath = path.join(dir, fileName);
+    if (fs.existsSync(fullPath)) {
+      try {
+        const stats = fs.statSync(fullPath);
+        if (!stats.isFile()) continue;
+        const buffer = fs.readFileSync(fullPath);
+        const ext = path.extname(fileName).toLowerCase();
+        const contentType = UPLOAD_MIME_TYPES[ext] || "application/octet-stream";
+        return new Response(buffer, {
+          status: 200,
+          headers: {
+            "Content-Type": contentType,
+            "Content-Length": String(stats.size),
+            "Cache-Control": "public, max-age=31536000, immutable",
+          },
+        });
+      } catch {
+        // continue search
+      }
+    }
+  }
+  return null;
+}
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -47,12 +97,19 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const url = new URL(request.url);
+
+      // Serve uploaded media files directly from disk in production
+      if (url.pathname.startsWith("/uploads/")) {
+        const fileResponse = serveUploadedFile(url.pathname);
+        if (fileResponse) return fileResponse;
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       const normalized = await normalizeCatastrophicSsrResponse(response);
 
       // Discourage search engines from indexing /admin or any protected/internal URLs via HTTP header
-      const url = new URL(request.url);
       if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api') || url.pathname.startsWith('/_server')) {
         const headers = new Headers(normalized.headers);
         headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
