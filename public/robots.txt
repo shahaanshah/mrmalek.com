@@ -1,0 +1,35 @@
+# Robots.txt for mrmalek.com (Single-Page Portfolio)
+# Explicitly disallow search engine crawlers from indexing the admin panel or internal endpoints
+
+User-agent: *
+Disallow: /admin/
+Disallow: /admin
+Disallow: /api/
+Disallow: /_server/
+Disallow: /.data/
+
+User-agent: Googlebot
+Disallow: /admin/
+Disallow: /admin
+Disallow: /api/
+Disallow: /_server/
+Disallow: /.data/
+Allow: /
+
+User-agent: Bingbot
+Disallow: /admin/
+Disallow: /admin
+Disallow: /api/
+Disallow: /_server/
+Disallow: /.data/
+Allow: /
+
+# Allow crawling of the single-page portfolio and public assets
+Allow: /
+Allow: /images/
+Allow: /uploads/
+Allow: /favicon.ico
+Allow: /cv-*.pdf
+
+# Canonical sitemap location
+Sitemap: https://mrmalek.com/sitemap.xml
