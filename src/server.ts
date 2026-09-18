@@ -65,6 +65,16 @@ export default {
 
       return normalized;
     } catch (error) {
+      if (error instanceof Response) {
+        return error;
+      }
+      if (error && typeof error === 'object' && 'status' in error && typeof (error as { status: number }).status === 'number' && (error as { status: number }).status >= 300 && (error as { status: number }).status < 400) {
+        const errObj = error as { status: number; headers?: HeadersInit };
+        return new Response(null, {
+          status: errObj.status,
+          headers: errObj.headers,
+        });
+      }
       console.error(error);
       return new Response(renderErrorPage(), {
         status: 500,

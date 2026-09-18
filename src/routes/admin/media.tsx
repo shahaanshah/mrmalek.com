@@ -646,7 +646,8 @@ function MediaPage() {
 
 export const Route = createFileRoute('/admin/media')({
   loader: async () => {
-    const [session, items] = await Promise.all([requireAdminSession(), adminListMedia()]);
+    const session = await requireAdminSession();
+    const items = await adminListMedia();
     return { session, items };
   },
   head: () => ({
