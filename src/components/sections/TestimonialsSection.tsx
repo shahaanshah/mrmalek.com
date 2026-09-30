@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Quote, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Quote, Star } from 'lucide-react';
+import SectionBadge from '@/components/ui/SectionBadge';
+import type { LandingSection } from '@/lib/cms/sections.types';
 
 export type TestimonialData = {
   id?: number | string;
@@ -43,9 +45,13 @@ const AUTOPLAY_MS = 7000;
 
 interface TestimonialsSectionProps {
   testimonials?: TestimonialData[];
+  section?: Partial<LandingSection>;
 }
 
-export default function TestimonialsSection({ testimonials: customTestimonials }: TestimonialsSectionProps = {}) {
+export default function TestimonialsSection({
+  testimonials: customTestimonials,
+  section,
+}: TestimonialsSectionProps = {}) {
   const items = customTestimonials && customTestimonials.length ? customTestimonials : defaultTestimonials;
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -121,38 +127,19 @@ export default function TestimonialsSection({ testimonials: customTestimonials }
       <div className="site-container">
         {/* Section Header */}
         <div className="section-header reveal" style={{ marginBottom: '3rem' }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.35rem 0.95rem',
-              borderRadius: 'var(--radius-full)',
-              backgroundColor: 'var(--accent-gold-bg)',
-              border: '1px solid var(--accent-gold-border)',
-              marginBottom: '1.25rem',
-            }}
-          >
-            <Star size={13} color="var(--accent-gold)" />
-            <span
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.75rem',
-                letterSpacing: '0.08em',
-                color: 'var(--accent-gold-light)',
-                textTransform: 'uppercase',
-                fontWeight: 600,
-              }}
-            >
-              CLIENT REVIEWS
-            </span>
-          </div>
+          <SectionBadge
+            section={section}
+            kicker={section?.kicker || 'ENDORSEMENTS'}
+            icon={section?.kicker_icon || 'star'}
+          />
 
           <h2 className="section-title">
-            What Clients &amp; Partners <span className="gradient-text-purple">Say</span>
+            {section?.main_heading || 'What Clients & Partners'}{' '}
+            <span className="gradient-text-purple">{section?.highlight_text || 'Say'}</span>
           </h2>
           <p className="section-subtitle">
-            Feedback from engineering leaders, founders, and executive stakeholders.
+            {section?.subtitle ||
+              'Feedback from engineering leaders, founders, and executive stakeholders.'}
           </p>
         </div>
 

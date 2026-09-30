@@ -295,4 +295,34 @@ export const migrations: Migration[] = [
       ALTER TABLE venture_details ADD COLUMN cover_image TEXT;
     `,
   },
+  {
+    name: '007_landing_sections_customizer',
+    sql: `
+      CREATE TABLE IF NOT EXISTS landing_sections (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        kicker TEXT,
+        kicker_icon TEXT DEFAULT 'sparkles',
+        kicker_logo_url TEXT,
+        kicker_font_size TEXT DEFAULT '0.75rem',
+        kicker_font_family TEXT DEFAULT 'mono',
+        kicker_font_weight TEXT DEFAULT '600',
+        kicker_text_color TEXT DEFAULT 'var(--accent-gold-light)',
+        kicker_bg_color TEXT DEFAULT 'var(--accent-gold-bg)',
+        kicker_border_color TEXT DEFAULT 'var(--accent-gold-border)',
+        kicker_icon_color TEXT DEFAULT 'var(--accent-gold)',
+        kicker_letter_spacing TEXT DEFAULT '0.08em',
+        kicker_text_transform TEXT DEFAULT 'uppercase',
+        kicker_enabled INTEGER NOT NULL DEFAULT 1,
+        main_heading TEXT,
+        highlight_text TEXT,
+        subtitle TEXT,
+        is_enabled INTEGER NOT NULL DEFAULT 1,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `,
+  },
 ];

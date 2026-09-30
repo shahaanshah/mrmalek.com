@@ -15,13 +15,16 @@ import { HOMEPAGE_DEFAULTS, type HomepageContent } from '@/lib/cms/homepage.type
 
 import { Venture } from '@/types';
 import Modal from '@/components/ui/Modal';
+import SectionBadge from '@/components/ui/SectionBadge';
+import type { LandingSection } from '@/lib/cms/sections.types';
 
 interface VentureEcosystemProps {
   content?: HomepageContent;
   ventures?: Venture[];
+  section?: Partial<LandingSection>;
 }
 
-export default function VentureEcosystem({ content, ventures }: VentureEcosystemProps = {}) {
+export default function VentureEcosystem({ content, ventures, section }: VentureEcosystemProps = {}) {
   const copy = content ?? HOMEPAGE_DEFAULTS;
   const items = ventures && ventures.length ? ventures : venturesData;
   const [selectedVenture, setSelectedVenture] = useState<Venture | null>(null);
@@ -49,38 +52,19 @@ export default function VentureEcosystem({ content, ventures }: VentureEcosystem
       <div className="site-container">
         {/* Section Header */}
         <div className="section-header reveal" style={{ marginBottom: '3rem' }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.35rem 0.95rem',
-              borderRadius: 'var(--radius-full)',
-              backgroundColor: 'var(--accent-gold-bg)',
-              border: '1px solid var(--accent-gold-border)',
-              marginBottom: '1.25rem',
-            }}
-          >
-            <Sparkles size={13} color="var(--accent-gold)" />
-            <span
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.75rem',
-                letterSpacing: '0.08em',
-                color: 'var(--accent-gold-light)',
-                textTransform: 'uppercase',
-                fontWeight: 600,
-              }}
-            >
-              {copy.ventures_kicker}
-            </span>
-          </div>
+          <SectionBadge
+            section={section}
+            kicker={section?.kicker || copy.ventures_kicker}
+            icon={section?.kicker_icon || 'rocket'}
+          />
 
           <h2 className="section-title" style={{ fontSize: 'clamp(2.4rem, 5.5vw, 4rem)' }}>
-            {copy.ventures_title} <span className="gradient-text-purple">{copy.ventures_highlight}</span>
+            {section?.main_heading || copy.ventures_title}{' '}
+            <span className="gradient-text-purple">
+              {section?.highlight_text || copy.ventures_highlight}
+            </span>
           </h2>
-          <p className="section-subtitle">{copy.ventures_subtitle}</p>
-
+          <p className="section-subtitle">{section?.subtitle || copy.ventures_subtitle}</p>
         </div>
 
         {/* Editorial Venture Rows */}

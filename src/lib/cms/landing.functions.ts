@@ -9,11 +9,13 @@ export const getLandingPageData = createServerFn({ method: 'GET' }).handler(asyn
     const { contentRepository } = await import('@/server/repositories/contentRepository.server');
     const { videoRepository } = await import('@/server/repositories/videoRepository.server');
     const { categoryRepository } = await import('@/server/repositories/categoryRepository.server');
+    const { sectionRepository } = await import('@/server/repositories/sectionRepository.server');
     const { toCase, toPhase, toVenture } = await import('./home.adapters');
 
     const [
       settings,
       content,
+      sections,
       partners,
       experiences,
       education,
@@ -29,6 +31,7 @@ export const getLandingPageData = createServerFn({ method: 'GET' }).handler(asyn
     ] = await Promise.all([
       landingRepository.getSettings(),
       homepageRepository.all(),
+      sectionRepository.getMap(),
       landingRepository.listPartners(),
       landingRepository.listExperiences(),
       landingRepository.listEducation(),
@@ -48,6 +51,7 @@ export const getLandingPageData = createServerFn({ method: 'GET' }).handler(asyn
     return {
       settings,
       content,
+      sections,
       partners,
       experiences: experiences.map((e) => ({
         ...e,

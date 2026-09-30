@@ -4,12 +4,15 @@ import { Phone, Mail, MapPin, Send, CheckCircle2, Copy, Sparkles, MessageCircle,
 import LinkedIn from '@/components/ui/LinkedInIcon';
 
 import { personalInfo } from '@/data/portfolioData';
+import SectionBadge from '@/components/ui/SectionBadge';
+import type { LandingSection } from '@/lib/cms/sections.types';
 
 interface ContactSectionProps {
   settings?: Record<string, string>;
+  section?: Partial<LandingSection>;
 }
 
-export default function ContactSection({ settings }: ContactSectionProps = {}) {
+export default function ContactSection({ settings, section }: ContactSectionProps = {}) {
   const phone = settings?.['contact_phone'] || personalInfo.formattedPhone;
   const rawPhone = phone.replace(/[^0-9+]/g, '');
   const email = settings?.['contact_email'] || personalInfo.email;
@@ -79,38 +82,19 @@ export default function ContactSection({ settings }: ContactSectionProps = {}) {
       <div className="site-container">
         {/* Section Header */}
         <div className="section-header reveal" style={{ marginBottom: '3rem' }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.35rem 0.95rem',
-              borderRadius: 'var(--radius-full)',
-              backgroundColor: 'rgba(168, 85, 247, 0.08)',
-              border: '1px solid rgba(168, 85, 247, 0.25)',
-              marginBottom: '1.25rem',
-            }}
-          >
-            <Sparkles size={13} color="var(--accent-purple-light)" />
-            <span
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.75rem',
-                letterSpacing: '0.08em',
-                color: 'var(--accent-purple-light)',
-                textTransform: 'uppercase',
-                fontWeight: 600,
-              }}
-            >
-              GET IN TOUCH
-            </span>
-          </div>
+          <SectionBadge
+            section={section}
+            kicker={section?.kicker || 'DIRECT INQUIRIES'}
+            icon={section?.kicker_icon || 'mail'}
+          />
 
           <h2 className="section-title">
-            Let&apos;s Build <span className="gradient-text-purple">Something Real</span>
+            {section?.main_heading || "Let's Build"}{' '}
+            <span className="gradient-text-purple">{section?.highlight_text || 'Something Real'}</span>
           </h2>
           <p className="section-subtitle">
-            Whether you&apos;re looking for a Technical Product Manager, an agile delivery leader, or an entrepreneurial collaborator — let&apos;s talk.
+            {section?.subtitle ||
+              "Whether you're looking for a Technical Product Manager, an agile delivery leader, or an entrepreneurial collaborator — let's talk."}
           </p>
         </div>
 

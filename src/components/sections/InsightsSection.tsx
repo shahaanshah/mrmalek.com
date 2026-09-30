@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import type { VideoWithCategory } from '@/lib/cms/types';
 import { derivedThumbnail, embedUrl, formatDate } from '@/lib/cms/types';
+import SectionBadge from '@/components/ui/SectionBadge';
+import type { LandingSection } from '@/lib/cms/sections.types';
 
 interface InsightsSectionProps {
   /** Published videos from the CMS SQLite database */
@@ -19,6 +21,7 @@ interface InsightsSectionProps {
   topics?: string[];
   /** Optional dynamic section headings from CMS */
   content?: Record<string, string>;
+  section?: Partial<LandingSection>;
 }
 
 const DEFAULT_TOPIC_PILLS = [
@@ -29,7 +32,7 @@ const DEFAULT_TOPIC_PILLS = [
   'Case Study Breakdown',
 ];
 
-export default function InsightsSection({ videos, topics = [], content }: InsightsSectionProps) {
+export default function InsightsSection({ videos, topics = [], content, section }: InsightsSectionProps) {
   const [activeTopic, setActiveTopic] = useState<string>('All');
   const [selectedVideo, setSelectedVideo] = useState<VideoWithCategory | null>(null);
 
@@ -91,41 +94,21 @@ export default function InsightsSection({ videos, topics = [], content }: Insigh
       <div className="site-container">
         {/* Section Header */}
         <div className="section-header reveal" style={{ marginBottom: '2.5rem' }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.35rem 0.95rem',
-              borderRadius: 'var(--radius-full)',
-              backgroundColor: 'var(--accent-gold-bg)',
-              border: '1px solid var(--accent-gold-border)',
-              marginBottom: '1.25rem',
-            }}
-          >
-            <Video size={13} color="var(--accent-gold)" />
-            <span
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.75rem',
-                letterSpacing: '0.08em',
-                color: 'var(--accent-gold-light)',
-                textTransform: 'uppercase',
-                fontWeight: 600,
-              }}
-            >
-              {content?.['pmtalks_kicker'] || 'PM TALKS & BREAKDOWNS'}
-            </span>
-          </div>
+          <SectionBadge
+            section={section}
+            kicker={section?.kicker || content?.['pmtalks_kicker'] || 'PM TALKS & BREAKDOWNS'}
+            icon={section?.kicker_icon || 'video'}
+          />
 
           <h2 className="section-title">
-            {content?.['pmtalks_title'] || 'Insights on'}{' '}
+            {section?.main_heading || content?.['pmtalks_title'] || 'Insights on'}{' '}
             <span className="gradient-text-purple">
-              {content?.['pmtalks_highlight'] || 'product management'}
+              {section?.highlight_text || content?.['pmtalks_highlight'] || 'product management'}
             </span>
           </h2>
           <p className="section-subtitle">
-            {content?.['pmtalks_subtitle'] ||
+            {section?.subtitle ||
+              content?.['pmtalks_subtitle'] ||
               'Weekly short videos on how I plan, prioritise, and ship real products.'}
           </p>
         </div>

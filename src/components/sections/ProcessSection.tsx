@@ -2,6 +2,8 @@ import React from 'react';
 import Image from '@/components/ui/Img';
 import { HOMEPAGE_DEFAULTS, type HomepageContent } from '@/lib/cms/homepage.types';
 import type { ProcessPhase as Phase } from '@/lib/cms/home.adapters';
+import SectionBadge from '@/components/ui/SectionBadge';
+import type { LandingSection } from '@/lib/cms/sections.types';
 
 const fallbackPhases: Phase[] = [
   {
@@ -33,9 +35,10 @@ const fallbackPhases: Phase[] = [
 interface ProcessSectionProps {
   content?: HomepageContent;
   phases?: Phase[];
+  section?: Partial<LandingSection>;
 }
 
-export default function ProcessSection({ content, phases }: ProcessSectionProps) {
+export default function ProcessSection({ content, phases, section }: ProcessSectionProps) {
   const copy = content ?? HOMEPAGE_DEFAULTS;
   const steps = phases && phases.length ? phases : fallbackPhases;
 
@@ -44,11 +47,18 @@ export default function ProcessSection({ content, phases }: ProcessSectionProps)
       <div className="site-container process-layout">
         <div className="process-story reveal--left">
           <header className="process-heading">
-            <p className="process-kicker">{copy.process_kicker}</p>
+            <SectionBadge
+              section={section}
+              kicker={section?.kicker || copy.process_kicker}
+              icon={section?.kicker_icon || 'route'}
+            />
             <h2>
-              {copy.process_title} <span className="gradient-text-purple">{copy.process_highlight}</span>
+              {section?.main_heading || copy.process_title}{' '}
+              <span className="gradient-text-purple">
+                {section?.highlight_text || copy.process_highlight}
+              </span>
             </h2>
-            <p>{copy.process_subtitle}</p>
+            <p>{section?.subtitle || copy.process_subtitle}</p>
           </header>
 
           <ol className="process-steps" aria-label="Four stages of delivery">

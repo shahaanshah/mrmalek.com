@@ -2,6 +2,8 @@ import React from 'react';
 import Image from '@/components/ui/Img';
 import { clientPartnersData } from '@/data/portfolioData';
 import { ArrowUpRight } from 'lucide-react';
+import SectionBadge from '@/components/ui/SectionBadge';
+import type { LandingSection } from '@/lib/cms/sections.types';
 
 export interface ClientPartnerItem {
   id?: number | string;
@@ -18,6 +20,7 @@ interface BusinessesBannerProps {
   /** Jumps the case-study module to the matching company. */
   onSelectCompany: (companyName: string) => void;
   partners?: ClientPartnerItem[];
+  section?: Partial<LandingSection>;
 }
 
 /** Marquee needs a duplicated track so the loop is seamless. */
@@ -66,20 +69,25 @@ function LogoMark({ partner, onSelect }: { partner: ClientPartnerItem; onSelect:
   );
 }
 
-export default function BusinessesBanner({ onSelectCompany, partners }: BusinessesBannerProps) {
+export default function BusinessesBanner({ onSelectCompany, partners, section }: BusinessesBannerProps) {
   const partnerList = partners && partners.length ? partners : clientPartnersData;
 
   return (
     <section id="businesses" className="trust-banner">
       <div className="site-container trust-banner__inner">
         <div className="trust-banner__statement reveal">
-          <span className="trust-banner__eyebrow">Trusted across borders</span>
+          <SectionBadge
+            section={section}
+            kicker={section?.kicker || 'TRUSTED BY'}
+            icon={section?.kicker_icon || 'shield'}
+          />
           <h2>
-            Trusted to ship <span>products that matter.</span>
+            {section?.main_heading || 'Trusted to ship'}{' '}
+            <span>{section?.highlight_text || 'products that matter.'}</span>
           </h2>
           <p>
-            Government, enterprise, and high-growth teams call me when delivery can&apos;t slip.
-            I turn complex requirements into products that actually launch.
+            {section?.subtitle ||
+              "Government, enterprise, and high-growth teams call me when delivery can't slip. I turn complex requirements into products that actually launch."}
           </p>
         </div>
 

@@ -26,6 +26,7 @@ function HomePage() {
   const {
     settings,
     content,
+    sections,
     partners,
     experiences,
     education,
@@ -40,6 +41,8 @@ function HomePage() {
     videos,
     topics,
   } = Route.useLoaderData();
+
+  const isEnabled = (key: string) => sections?.[key]?.is_enabled !== 0;
 
   // Case study targeted from a Trusted By logo click. Object wrapper so
   // clicking the same brand twice still re-triggers the jump.
@@ -68,99 +71,124 @@ function HomePage() {
       <Hero onScrollToContact={scrollToContact} content={content} settings={settings} />
 
       {/* 02. Enterprise Clients & Brands Worked With */}
-      <BusinessesBanner
-        partners={partners}
-        onSelectCompany={(company) => {
-          // Find the partner record to check for an explicit case study link
-          const partner = partners.find(
-            (p) => (p.name || p.logo_text || '') === company
-          );
-          const linkedId = partner?.linked_case_study_id;
+      {isEnabled('partners') && (
+        <BusinessesBanner
+          section={sections?.['partners']}
+          partners={partners}
+          onSelectCompany={(company) => {
+            // Find the partner record to check for an explicit case study link
+            const partner = partners.find(
+              (p) => (p.name || p.logo_text || '') === company
+            );
+            const linkedId = partner?.linked_case_study_id;
 
-          let caseId: string | null = null;
+            let caseId: string | null = null;
 
-          if (linkedId) {
-            // Explicit link: find the case study whose content_id matches
-            // The case study id in the cases array is the slug from content_items
-            // We need to find by the content_items.id which is linked_case_study_id
-            // The slug is stored as the case id, so we look up by the content id
-            const match = cases.find((c) => {
-              // The cases array ids are slugs, but the linked_case_study_id is the content_items.id
-              // We stored the mapping in caseMetaMap keyed by slug. We need a reverse lookup.
-              // Since we don't have content_id on the case, try checking via the __content_id field
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              return (c as any).__content_id === linkedId;
-            });
-            if (match) {
-              caseId = match.id;
+            if (linkedId) {
+              // Explicit link: find the case study whose content_id matches
+              // The case study id in the cases array is the slug from content_items
+              // We need to find by the content_items.id which is linked_case_study_id
+              // The slug is stored as the case id, so we look up by the content id
+              const match = cases.find((c) => {
+                // The cases array ids are slugs, but the linked_case_study_id is the content_items.id
+                // We stored the mapping in caseMetaMap keyed by slug. We need a reverse lookup.
+                // Since we don't have content_id on the case, try checking via the __content_id field
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                return (c as any).__content_id === linkedId;
+              });
+              if (match) {
+                caseId = match.id;
+              }
             }
-          }
 
-          // Fallback: name-based matching if no explicit link or not found
-          if (!caseId) {
-            const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
-            const cNorm = norm(company);
-            const match = cases.find((c) => {
-              const compName = norm(c.companyName || '');
-              const aliases = (caseMetaMap[c.id]?.aliases || []).map(norm);
-              return (
-                compName === cNorm ||
-                aliases.some((a) => a === cNorm)
-              );
-            });
-            caseId = match?.id || findCaseByCompany(company);
-          }
+            // Fallback: name-based matching if no explicit link or not found
+            if (!caseId) {
+              const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+              const cNorm = norm(company);
+              const match = cases.find((c) => {
+                const compName = norm(c.companyName || '');
+                const aliases = (caseMetaMap[c.id]?.aliases || []).map(norm);
+                return (
+                  compName === cNorm ||
+                  aliases.some((a) => a === cNorm)
+                );
+              });
+              caseId = match?.id || findCaseByCompany(company);
+            }
 
-          if (caseId) {
-            setFocusCase((prev) => ({ id: caseId!, n: (prev?.n ?? 0) + 1 }));
-          }
-        }}
-      />
+            if (caseId) {
+              setFocusCase((prev) => ({ id: caseId!, n: (prev?.n ?? 0) + 1 }));
+            }
+          }}
+        />
+      )}
 
       {/* 03. Featured Case Studies (Proof) */}
-      <CareerMatrix
-        variant="cases"
-        onScrollToContact={scrollToContact}
-        focusCaseId={focusCase ? `${focusCase.id}#${focusCase.n}` : null}
-        cases={cases}
-        meta={caseMetaMap}
-        content={content}
-      />
+      {isEnabled('cases') && (
+        <CareerMatrix
+          variant="cases"
+          section={sections?.['cases']}
+          onScrollToContact={scrollToContact}
+          focusCaseId={focusCase ? `${focusCase.id}#${focusCase.n}` : null}
+          cases={cases}
+          meta={caseMetaMap}
+          content={content}
+        />
+      )}
 
       {/* 03b. Optional intro paragraph, editable in the admin */}
-      {content.intro_body && <AboutSection content={content} />}
+      {isEnabled('about') && content.intro_body && (
+        <AboutSection content={content} section={sections?.['about']} />
+      )}
 
       {/* 04. How I Work: From Problem to Delivery */}
-      <ProcessSection content={content} phases={phases} />
+      {isEnabled('process') && (
+        <ProcessSection content={content} phases={phases} section={sections?.['process']} />
+      )}
 
       {/* 04b. Insights / PM Talks: Adjacent to How I Work per review */}
-      <InsightsSection videos={videos} topics={topics} content={content} />
+      {isEnabled('videos') && (
+        <InsightsSection videos={videos} topics={topics} content={content} section={sections?.['videos']} />
+      )}
 
       {/* 05. Toolkit: The stack behind the delivery */}
-      <ToolkitSection toolkits={toolkits} />
+      {isEnabled('toolkit') && (
+        <ToolkitSection toolkits={toolkits} section={sections?.['toolkit']} />
+      )}
 
       {/* 06. Career History, Education & Certifications */}
-      <CareerMatrix
-        variant="history"
-        onScrollToContact={scrollToContact}
-        experiences={experiences}
-        education={education}
-        certifications={certifications}
-        settings={settings}
-        content={content}
-      />
+      {isEnabled('history') && (
+        <CareerMatrix
+          variant="history"
+          section={sections?.['history']}
+          onScrollToContact={scrollToContact}
+          experiences={experiences}
+          education={education}
+          certifications={certifications}
+          settings={settings}
+          content={content}
+        />
+      )}
 
       {/* 06b. Other projects */}
-      <OtherProjects projects={otherProjects} />
+      {isEnabled('other_projects') && (
+        <OtherProjects projects={otherProjects} section={sections?.['other_projects']} />
+      )}
 
       {/* 07. Social Proof & Leadership Endorsements */}
-      <TestimonialsSection testimonials={testimonials} />
+      {isEnabled('testimonials') && (
+        <TestimonialsSection testimonials={testimonials} section={sections?.['testimonials']} />
+      )}
 
       {/* 08. Conclusion: Contact & Direct Inquiries */}
-      <ContactSection settings={settings} />
+      {isEnabled('contact') && (
+        <ContactSection settings={settings} section={sections?.['contact']} />
+      )}
 
       {/* 09. Outside Client Work: Ventures */}
-      <VentureEcosystem content={content} ventures={ventures} />
+      {isEnabled('ventures') && (
+        <VentureEcosystem content={content} ventures={ventures} section={sections?.['ventures']} />
+      )}
 
       {/* 10. Polished Editorial Footer */}
       <Footer onOpenConsultation={scrollToContact} settings={settings} />

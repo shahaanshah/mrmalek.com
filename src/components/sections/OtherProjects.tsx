@@ -1,7 +1,8 @@
 import React from 'react';
 import Image from '@/components/ui/Img';
-import { Layers } from 'lucide-react';
 import { otherProjectsData } from '@/data/portfolioData';
+import SectionBadge from '@/components/ui/SectionBadge';
+import type { LandingSection } from '@/lib/cms/sections.types';
 
 export interface OtherProjectItem {
   id?: number | string;
@@ -15,47 +16,29 @@ export interface OtherProjectItem {
 
 interface OtherProjectsProps {
   projects?: OtherProjectItem[];
+  section?: Partial<LandingSection>;
 }
 
-export default function OtherProjects({ projects }: OtherProjectsProps) {
+export default function OtherProjects({ projects, section }: OtherProjectsProps) {
   const list = projects && projects.length ? projects : otherProjectsData;
 
   return (
     <section id="projects" className="section-wrapper" style={{ backgroundColor: 'var(--bg-space)', position: 'relative' }}>
       <div className="site-container">
         <div className="section-header reveal" style={{ marginBottom: '2.75rem' }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.35rem 0.95rem',
-              borderRadius: 'var(--radius-full)',
-              backgroundColor: 'var(--accent-gold-bg)',
-              border: '1px solid var(--accent-gold-border)',
-              marginBottom: '1.25rem',
-            }}
-          >
-            <Layers size={13} color="var(--accent-gold)" />
-            <span
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.75rem',
-                letterSpacing: '0.08em',
-                color: 'var(--accent-gold-light)',
-                textTransform: 'uppercase',
-                fontWeight: 600,
-              }}
-            >
-              OTHER PROJECTS
-            </span>
-          </div>
+          <SectionBadge
+            section={section}
+            kicker={section?.kicker || 'OTHER PROJECTS'}
+            icon={section?.kicker_icon || 'layers'}
+          />
 
           <h2 className="section-title">
-            Shorter builds &amp; <span className="gradient-text-purple">engagements</span>
+            {section?.main_heading || 'Shorter builds &'}{' '}
+            <span className="gradient-text-purple">{section?.highlight_text || 'engagements'}</span>
           </h2>
           <p className="section-subtitle">
-            Work outside the main timeline — products I helped scope, ship or steady.
+            {section?.subtitle ||
+              'Work outside the main timeline — products I helped scope, ship or steady.'}
           </p>
         </div>
 

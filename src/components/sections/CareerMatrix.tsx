@@ -22,6 +22,8 @@ import useTilt from '@/hooks/useTilt';
 import Drawer from '@/components/ui/Drawer';
 import { ProjectItem } from '@/types';
 import { HOMEPAGE_DEFAULTS, type HomepageContent } from '@/lib/cms/homepage.types';
+import SectionBadge from '@/components/ui/SectionBadge';
+import type { LandingSection } from '@/lib/cms/sections.types';
 
 export interface ExperienceRecord {
   id: number | string;
@@ -72,6 +74,7 @@ interface CareerMatrixProps {
   education?: EducationRecord[];
   certifications?: CertificationRecord[];
   settings?: Record<string, string>;
+  section?: Partial<LandingSection>;
 }
 
 export default function CareerMatrix({
@@ -85,6 +88,7 @@ export default function CareerMatrix({
   education,
   certifications,
   settings,
+  section,
 }: CareerMatrixProps) {
   const copy = content ?? HOMEPAGE_DEFAULTS;
   const cvDownloadUrl = copy.cv_banner_file_url || settings?.['cv_resume_pdf'] || '/cv-malek-hussein.pdf';
@@ -149,37 +153,19 @@ export default function CareerMatrix({
         {showCases && (<>
         {/* ─── Section Header ─── */}
         <div className="section-header reveal">
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.35rem 0.95rem',
-              borderRadius: 'var(--radius-full)',
-              backgroundColor: 'var(--accent-gold-bg)',
-              border: '1px solid var(--accent-gold-border)',
-              marginBottom: '1.25rem',
-            }}
-          >
-            <Sparkles size={13} color="var(--accent-gold)" />
-            <span
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.75rem',
-                letterSpacing: '0.08em',
-                color: 'var(--accent-gold-light)',
-                textTransform: 'uppercase',
-                fontWeight: 600,
-              }}
-            >
-              {copy.work_kicker}
-            </span>
-          </div>
+          <SectionBadge
+            section={section}
+            kicker={section?.kicker || copy.work_kicker}
+            icon={section?.kicker_icon || 'sparkles'}
+          />
 
           <h2 className="section-title">
-            {copy.work_title} <span className="gradient-text-purple">{copy.work_highlight}</span>
+            {section?.main_heading || copy.work_title}{' '}
+            <span className="gradient-text-purple">
+              {section?.highlight_text || copy.work_highlight}
+            </span>
           </h2>
-          <p className="section-subtitle">{copy.work_subtitle}</p>
+          <p className="section-subtitle">{section?.subtitle || copy.work_subtitle}</p>
         </div>
 
         {/* ─── FILTER TABS ─── */}
@@ -476,20 +462,12 @@ export default function CareerMatrix({
             }}
           >
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
-                <Briefcase size={18} color="var(--accent-gold)" />
-                <span
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.72rem',
-                    letterSpacing: '0.09em',
-                    textTransform: 'uppercase',
-                    color: 'var(--accent-gold-light)',
-                    fontWeight: 700,
-                  }}
-                >
-                  Career Journey
-                </span>
+              <div style={{ marginBottom: '0.4rem' }}>
+                <SectionBadge
+                  section={section}
+                  kicker={section?.kicker || copy.history_kicker || 'Career Journey'}
+                  icon={section?.kicker_icon || 'briefcase'}
+                />
               </div>
               <h3
                 style={{
@@ -501,7 +479,10 @@ export default function CareerMatrix({
                   lineHeight: 1.2,
                 }}
               >
-                Eight years of owning delivery, <span className="gradient-text-purple">role by role</span>
+                {section?.main_heading || 'Eight years of owning delivery,'}{' '}
+                <span className="gradient-text-purple">
+                  {section?.highlight_text || 'role by role'}
+                </span>
               </h3>
             </div>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
