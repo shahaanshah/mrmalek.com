@@ -2,20 +2,24 @@ import * as React from 'react';
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
 import { toast } from 'sonner';
-import { BookOpen, ExternalLink } from 'lucide-react';
+import { BookOpen, ExternalLink, Sliders, Minimize2 } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { requireAdminSession } from '@/lib/cms/admin.functions';
 import { adminGetHomepage, adminSaveHomepage } from '@/lib/cms/homepage.functions';
+import { adminListLandingSections, adminSaveLandingSection } from '@/lib/cms/sections.functions';
+import type { LandingSection } from '@/lib/cms/sections.types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 
 function AboutAdminPage() {
-  const { session, content } = Route.useLoaderData();
+  const { session, content, aboutSection } = Route.useLoaderData();
   const router = useRouter();
   const save = useServerFn(adminSaveHomepage);
+  const saveSection = useServerFn(adminSaveLandingSection);
   const [busy, setBusy] = React.useState(false);
 
   const [form, setForm] = React.useState({
@@ -23,6 +27,18 @@ function AboutAdminPage() {
     intro_title: content.intro_title || 'About Me',
     intro_body: content.intro_body || '',
   });
+
+  const [sectionSettings, setSectionSettings] = React.useState<Partial<LandingSection>>(() => ({
+    ...(aboutSection || {
+      id: 'about',
+      title: 'About Me Intro Paragraph',
+      kicker: 'ABOUT',
+      main_heading: 'About Me',
+      is_enabled: 1,
+      is_collapsible: 0,
+      default_collapsed: 0,
+    }),
+  }));
 
   function updateField(key: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -33,8 +49,18 @@ function AboutAdminPage() {
     setBusy(true);
     try {
       await save({ data: form });
+      if (sectionSettings.id) {
+        await saveSection({
+          data: {
+            ...aboutSection,
+            ...sectionSettings,
+            kicker: form.intro_kicker,
+            main_heading: form.intro_title,
+          } as LandingSection,
+        });
+      }
       await router.invalidate();
-      toast.success('About Me narrative saved successfully!');
+      toast.success('About Me narrative and section visibility saved successfully!');
     } catch {
       toast.error('Could not save About Me narrative.');
     } finally {
@@ -108,12 +134,76 @@ function AboutAdminPage() {
                 Press Enter twice between paragraphs to create clean paragraph spacing.
               </p>
             </div>
-
-            <Button type="submit" size="lg" disabled={busy}>
-              {busy ? 'Saving...' : 'Save Narrative'}
-            </Button>
           </CardContent>
         </Card>
+
+        {/* Section Visibility & Collapsible Controls */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sliders className="size-5 text-primary" /> Landing Page Visibility &amp; Collapsible Settings
+            </CardTitle>
+            <CardDescription>
+              Control whether this section appears on the landing page, and whether visitors can expand/collapse it to reduce page length.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/10">
+              <div>
+                <Label className="text-sm font-semibold">Section Visibility on Landing Page</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  When enabled, this About Me section renders on the live homepage. When disabled, it is completely hidden.
+                </p>
+              </div>
+              <Switch
+                checked={Boolean(sectionSettings.is_enabled !== 0)}
+                onCheckedChange={(checked) =>
+                  setSectionSettings((prev) => ({ ...prev, is_enabled: checked ? 1 : 0 }))
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/10">
+              <div>
+                <Label className="text-sm font-semibold flex items-center gap-1.5">
+                  <Minimize2 className="size-3.5 text-primary" /> Make Section Collapsible on Landing Page
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Allows website visitors to collapse the narrative into a compact summary card to reduce page length.
+                </p>
+              </div>
+              <Switch
+                checked={Boolean(sectionSettings.is_collapsible)}
+                onCheckedChange={(checked) =>
+                  setSectionSettings((prev) => ({ ...prev, is_collapsible: checked ? 1 : 0 }))
+                }
+              />
+            </div>
+
+            {Boolean(sectionSettings.is_collapsible) && (
+              <div className="flex items-center justify-between rounded-lg border border-primary/30 p-4 bg-primary/5 ml-3">
+                <div>
+                  <Label className="text-sm font-semibold">Collapsed by Default on Page Load</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Start this section collapsed on initial page load with a button for visitors to expand it.
+                  </p>
+                </div>
+                <Switch
+                  checked={Boolean(sectionSettings.default_collapsed)}
+                  onCheckedChange={(checked) =>
+                    setSectionSettings((prev) => ({ ...prev, default_collapsed: checked ? 1 : 0 }))
+                  }
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="mt-6">
+          <Button type="submit" size="lg" disabled={busy}>
+            {busy ? 'Saving...' : 'Save Narrative & Section Settings'}
+          </Button>
+        </div>
       </form>
     </AdminLayout>
   );
@@ -121,11 +211,13 @@ function AboutAdminPage() {
 
 export const Route = createFileRoute('/admin/about')({
   loader: async () => {
-    const [session, content] = await Promise.all([
+    const [session, content, sections] = await Promise.all([
       requireAdminSession(),
       adminGetHomepage(),
+      adminListLandingSections(),
     ]);
-    return { session, content };
+    const aboutSection = sections.find((s) => s.id === 'about') || null;
+    return { session, content, aboutSection };
   },
   head: () => ({
     meta: [

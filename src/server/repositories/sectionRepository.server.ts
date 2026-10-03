@@ -9,20 +9,24 @@ export const sectionRepository = {
   async ensureSeeded(): Promise<void> {
     const db = await getDb();
     try {
-      const row = await db.get<{ count: number }>('SELECT COUNT(*) AS count FROM landing_sections');
-      if (row && row.count > 0) return;
+      await db.get('SELECT 1 FROM landing_sections LIMIT 1');
     } catch {
       // Table might not exist yet if migration hasn't run
       return;
     }
 
     // Read any existing homepage settings (home.*) to preserve previous customizations
-    const homeRows = await db.all<{ key: string; value: string }>(
-      "SELECT key, value FROM site_settings WHERE key LIKE 'home.%'"
-    );
-    const existingHome = Object.fromEntries(
-      homeRows.map((r) => [r.key.replace(/^home\./, ''), r.value])
-    );
+    let existingHome: Record<string, string> = {};
+    try {
+      const homeRows = await db.all<{ key: string; value: string }>(
+        "SELECT key, value FROM site_settings WHERE key LIKE 'home.%'"
+      );
+      existingHome = Object.fromEntries(
+        homeRows.map((r) => [r.key.replace(/^home\./, ''), r.value])
+      );
+    } catch {
+      // Ignore if site_settings is empty
+    }
 
     for (const sec of DEFAULT_LANDING_SECTIONS) {
       // Map existing home keys if present
@@ -31,7 +35,12 @@ export const sectionRepository = {
       let highlight_text = sec.highlight_text;
       let subtitle = sec.subtitle;
 
-      if (sec.id === 'cases') {
+      if (sec.id === 'hero') {
+        kicker = existingHome['hero_eyebrow'] ?? kicker;
+        main_heading = existingHome['hero_title'] ?? main_heading;
+        highlight_text = existingHome['hero_highlight'] ?? highlight_text;
+        subtitle = existingHome['hero_subtitle'] ?? subtitle;
+      } else if (sec.id === 'cases') {
         kicker = existingHome['work_kicker'] ?? kicker;
         main_heading = existingHome['work_title'] ?? main_heading;
         highlight_text = existingHome['work_highlight'] ?? highlight_text;
@@ -82,8 +91,8 @@ export const sectionRepository = {
           kicker_font_size, kicker_font_family, kicker_font_weight,
           kicker_text_color, kicker_bg_color, kicker_border_color, kicker_icon_color,
           kicker_letter_spacing, kicker_text_transform, kicker_enabled,
-          main_heading, highlight_text, subtitle, is_enabled, sort_order
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          main_heading, highlight_text, subtitle, is_enabled, is_collapsible, default_collapsed, sort_order
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           sec.id,
           sec.title,
@@ -105,6 +114,8 @@ export const sectionRepository = {
           highlight_text ?? '',
           subtitle ?? '',
           sec.is_enabled ?? 1,
+          sec.is_collapsible ?? 0,
+          sec.default_collapsed ?? 0,
           sec.sort_order ?? 0,
         ]
       );
@@ -151,8 +162,8 @@ export const sectionRepository = {
         kicker_font_size, kicker_font_family, kicker_font_weight,
         kicker_text_color, kicker_bg_color, kicker_border_color, kicker_icon_color,
         kicker_letter_spacing, kicker_text_transform, kicker_enabled,
-        main_heading, highlight_text, subtitle, is_enabled, sort_order, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        main_heading, highlight_text, subtitle, is_enabled, is_collapsible, default_collapsed, sort_order, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
         description = excluded.description,
@@ -173,6 +184,8 @@ export const sectionRepository = {
         highlight_text = excluded.highlight_text,
         subtitle = excluded.subtitle,
         is_enabled = excluded.is_enabled,
+        is_collapsible = excluded.is_collapsible,
+        default_collapsed = excluded.default_collapsed,
         sort_order = excluded.sort_order,
         updated_at = datetime('now')`,
       [
@@ -196,6 +209,8 @@ export const sectionRepository = {
         sec.highlight_text ?? '',
         sec.subtitle ?? '',
         sec.is_enabled ? 1 : 0,
+        sec.is_collapsible ? 1 : 0,
+        sec.default_collapsed ? 1 : 0,
         sec.sort_order ?? 0,
       ]
     );
@@ -209,6 +224,14 @@ export const sectionRepository = {
     await db.run(
       "UPDATE landing_sections SET is_enabled = ?, updated_at = datetime('now') WHERE id = ?",
       [isEnabled ? 1 : 0, id]
+    );
+  },
+
+  async toggleCollapsible(id: string, isCollapsible: boolean): Promise<void> {
+    const db = await getDb();
+    await db.run(
+      "UPDATE landing_sections SET is_collapsible = ?, updated_at = datetime('now') WHERE id = ?",
+      [isCollapsible ? 1 : 0, id]
     );
   },
 
@@ -230,6 +253,7 @@ export const sectionRepository = {
   async syncToHomepageSettings(sec: LandingSection): Promise<void> {
     const db = await getDb();
     const map: Record<string, [string, string, string, string]> = {
+      hero: ['hero_eyebrow', 'hero_title', 'hero_highlight', 'hero_subtitle'],
       cases: ['work_kicker', 'work_title', 'work_highlight', 'work_subtitle'],
       process: ['process_kicker', 'process_title', 'process_highlight', 'process_subtitle'],
       videos: ['pmtalks_kicker', 'pmtalks_title', 'pmtalks_highlight', 'pmtalks_subtitle'],
@@ -239,6 +263,21 @@ export const sectionRepository = {
       testimonials: ['testimonials_kicker', 'testimonials_title', 'testimonials_highlight', 'testimonials_subtitle'],
       contact: ['contact_kicker', 'contact_title', 'contact_highlight', 'contact_subtitle'],
     };
+
+    if (sec.id === 'about') {
+      const values: [string, string][] = [
+        ['home.intro_kicker', sec.kicker ?? ''],
+        ['home.intro_title', sec.main_heading ?? ''],
+      ];
+      for (const [k, v] of values) {
+        await db.run(
+          `INSERT INTO site_settings (key, value, updated_at) VALUES (?, ?, datetime('now'))
+           ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')`,
+          [k, v]
+        );
+      }
+      return;
+    }
 
     const keys = map[sec.id];
     if (!keys) return;
@@ -260,3 +299,4 @@ export const sectionRepository = {
     }
   },
 };
+

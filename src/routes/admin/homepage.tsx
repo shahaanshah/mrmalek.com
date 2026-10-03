@@ -125,6 +125,12 @@ function HomepagePage() {
                   onChange={(e) => updateField('hero_eyebrow', e.target.value)}
                   placeholder="MALEK HUSSEIN • PRODUCT LEADER & BUILDER"
                 />
+                <p className="text-[11px] text-muted-foreground">
+                  Text displayed in the hero kicker badge. For advanced styling (font, custom colors, icon/logo, visibility), manage it in{' '}
+                  <a href="/admin/sections" className="text-primary underline font-medium">
+                    Section Headings Customizer
+                  </a>.
+                </p>
               </div>
 
               <div className="space-y-2">

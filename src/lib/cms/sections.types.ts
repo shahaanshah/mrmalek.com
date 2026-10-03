@@ -91,12 +91,39 @@ export const landingSectionSchema = z.object({
   highlight_text: z.string().max(300).optional().default(''),
   subtitle: z.string().max(1000).optional().default(''),
   is_enabled: z.union([z.boolean(), z.number()]).transform((v) => (typeof v === 'boolean' ? (v ? 1 : 0) : v)).default(1),
+  is_collapsible: z.union([z.boolean(), z.number()]).transform((v) => (typeof v === 'boolean' ? (v ? 1 : 0) : v)).default(0),
+  default_collapsed: z.union([z.boolean(), z.number()]).transform((v) => (typeof v === 'boolean' ? (v ? 1 : 0) : v)).default(0),
   sort_order: z.coerce.number().int().default(0),
 });
 
 export type LandingSection = z.infer<typeof landingSectionSchema>;
 
 export const DEFAULT_LANDING_SECTIONS: LandingSection[] = [
+  {
+    id: 'hero',
+    title: 'Hero / Introduction',
+    description: 'Top-of-page identity header, personal value proposition, portrait, and highlight metrics.',
+    kicker: 'MALEK HUSSEIN • PRODUCT LEADER & BUILDER',
+    kicker_icon: 'sparkles',
+    kicker_logo_url: '',
+    kicker_font_size: '0.75rem',
+    kicker_font_family: 'mono',
+    kicker_font_weight: '600',
+    kicker_text_color: 'var(--accent-purple-light)',
+    kicker_bg_color: 'rgba(168, 85, 247, 0.08)',
+    kicker_border_color: 'rgba(168, 85, 247, 0.25)',
+    kicker_icon_color: 'var(--accent-purple-light)',
+    kicker_letter_spacing: '0.08em',
+    kicker_text_transform: 'uppercase',
+    kicker_enabled: 1,
+    main_heading: 'I build digital products, businesses, and systems that',
+    highlight_text: 'turn ideas into revenue.',
+    subtitle: 'Over 8+ years leading cross-functional engineering and design teams across North America and the Middle East.',
+    is_enabled: 1,
+    is_collapsible: 0,
+    default_collapsed: 0,
+    sort_order: 0,
+  },
   {
     id: 'partners',
     title: 'Enterprise Clients & Brands',
@@ -118,6 +145,8 @@ export const DEFAULT_LANDING_SECTIONS: LandingSection[] = [
     highlight_text: 'Brands Worked With',
     subtitle: 'Government, enterprise, and high-growth teams call me when delivery cannot slip. I turn complex requirements into products that actually launch.',
     is_enabled: 1,
+    is_collapsible: 0,
+    default_collapsed: 0,
     sort_order: 0,
   },
   {
@@ -141,6 +170,8 @@ export const DEFAULT_LANDING_SECTIONS: LandingSection[] = [
     highlight_text: 'Real Results',
     subtitle: 'Measurable outcomes delivered for enterprise platforms, B2B marketplaces, and venture-backed scale-ups.',
     is_enabled: 1,
+    is_collapsible: 0,
+    default_collapsed: 0,
     sort_order: 1,
   },
   {
@@ -164,6 +195,8 @@ export const DEFAULT_LANDING_SECTIONS: LandingSection[] = [
     highlight_text: '',
     subtitle: '',
     is_enabled: 1,
+    is_collapsible: 0,
+    default_collapsed: 0,
     sort_order: 2,
   },
   {
@@ -187,6 +220,8 @@ export const DEFAULT_LANDING_SECTIONS: LandingSection[] = [
     highlight_text: 'shipped product.',
     subtitle: 'A simple, repeatable path: understand, design, build, and improve.',
     is_enabled: 1,
+    is_collapsible: 0,
+    default_collapsed: 0,
     sort_order: 3,
   },
   {
@@ -210,6 +245,8 @@ export const DEFAULT_LANDING_SECTIONS: LandingSection[] = [
     highlight_text: 'product management',
     subtitle: 'Weekly short videos on how I plan, prioritise, and ship real products.',
     is_enabled: 1,
+    is_collapsible: 0,
+    default_collapsed: 0,
     sort_order: 4,
   },
   {
@@ -233,6 +270,8 @@ export const DEFAULT_LANDING_SECTIONS: LandingSection[] = [
     highlight_text: 'methodologies',
     subtitle: 'The engineering, product, and leadership stack behind the delivery.',
     is_enabled: 1,
+    is_collapsible: 0,
+    default_collapsed: 0,
     sort_order: 5,
   },
   {
@@ -256,6 +295,8 @@ export const DEFAULT_LANDING_SECTIONS: LandingSection[] = [
     highlight_text: 'Credentials',
     subtitle: 'Tenure across enterprise platforms, scale-ups, and academic qualifications.',
     is_enabled: 1,
+    is_collapsible: 0,
+    default_collapsed: 0,
     sort_order: 6,
   },
   {
@@ -279,6 +320,8 @@ export const DEFAULT_LANDING_SECTIONS: LandingSection[] = [
     highlight_text: 'engagements',
     subtitle: 'Work outside the main timeline — products I helped scope, ship or steady.',
     is_enabled: 1,
+    is_collapsible: 0,
+    default_collapsed: 0,
     sort_order: 7,
   },
   {
@@ -302,6 +345,8 @@ export const DEFAULT_LANDING_SECTIONS: LandingSection[] = [
     highlight_text: 'Social Proof',
     subtitle: 'Feedback from executive stakeholders, engineering directors, and founders.',
     is_enabled: 1,
+    is_collapsible: 0,
+    default_collapsed: 0,
     sort_order: 8,
   },
   {
@@ -325,6 +370,8 @@ export const DEFAULT_LANDING_SECTIONS: LandingSection[] = [
     highlight_text: 'something great.',
     subtitle: 'Open to select technical product consulting, fractional delivery leadership, and high-impact advisory.',
     is_enabled: 1,
+    is_collapsible: 0,
+    default_collapsed: 0,
     sort_order: 9,
   },
   {
@@ -348,6 +395,8 @@ export const DEFAULT_LANDING_SECTIONS: LandingSection[] = [
     highlight_text: 'Client Work',
     subtitle: 'The ventures I build and run on my own time.',
     is_enabled: 1,
+    is_collapsible: 0,
+    default_collapsed: 0,
     sort_order: 10,
   },
 ];

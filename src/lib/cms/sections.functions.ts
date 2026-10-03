@@ -80,6 +80,38 @@ export const adminToggleLandingSection = createServerFn({ method: 'POST' })
     return { ok: true as const };
   });
 
+export const adminToggleCollapsibleLandingSection = createServerFn({ method: 'POST' })
+  .validator((input: unknown) =>
+    z
+      .object({
+        id: z.string().min(1),
+        isCollapsible: z.boolean(),
+      })
+      .parse(input)
+  )
+  .handler(async ({ data }) => {
+    const session = await requireAdminSession();
+    const { sectionRepository } = await import('@/server/repositories/sectionRepository.server');
+    await sectionRepository.toggleCollapsible(data.id, data.isCollapsible);
+
+    const [{ activityRepository }, { invalidate, CacheKeys }] = await Promise.all([
+      import('@/server/repositories/activityRepository.server'),
+      import('@/server/cache.server'),
+    ]);
+
+    await activityRepository.log({
+      adminId: session.id,
+      adminEmail: session.email,
+      action: 'update',
+      entityType: 'landing_section',
+      entityId: null,
+      summary: `${data.isCollapsible ? 'Made collapsible' : 'Made fixed'} section ${data.id}`,
+    });
+
+    invalidate(CacheKeys.settings, CacheKeys.content);
+    return { ok: true as const };
+  });
+
 export const adminDeleteLandingSection = createServerFn({ method: 'POST' })
   .validator((input: unknown) => z.object({ id: z.string().min(1) }).parse(input))
   .handler(async ({ data }) => {

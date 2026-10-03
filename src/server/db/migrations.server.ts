@@ -325,4 +325,11 @@ export const migrations: Migration[] = [
       );
     `,
   },
+  {
+    name: '008_collapsible_sections',
+    sql: `
+      ALTER TABLE landing_sections ADD COLUMN is_collapsible INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE landing_sections ADD COLUMN default_collapsed INTEGER NOT NULL DEFAULT 0;
+    `,
+  },
 ];

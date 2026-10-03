@@ -141,6 +141,8 @@ function SectionsAdminPage() {
     highlight_text: 'Heading',
     subtitle: 'Description of the section.',
     is_enabled: 1,
+    is_collapsible: 0,
+    default_collapsed: 0,
     sort_order: sectionsList.length,
   });
 
@@ -286,6 +288,8 @@ function SectionsAdminPage() {
       highlight_text: newSection.highlight_text ?? '',
       subtitle: newSection.subtitle ?? '',
       is_enabled: 1,
+      is_collapsible: newSection.is_collapsible ? 1 : 0,
+      default_collapsed: newSection.default_collapsed ? 1 : 0,
       sort_order: sectionsList.length,
     };
 
@@ -446,6 +450,11 @@ function SectionsAdminPage() {
                           Hidden
                         </Badge>
                       )}
+                      {Boolean(data.is_collapsible) && (
+                        <Badge variant="outline" className="border-purple-500/40 text-purple-400 text-[10px]">
+                          Collapsible{Boolean(data.default_collapsed) ? ' • Closed' : ''}
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground truncate max-w-md hidden sm:block">
                       {sec.description || 'Landing page section'}
@@ -492,7 +501,14 @@ function SectionsAdminPage() {
                       <span className="flex items-center gap-1.5">
                         <Eye className="size-3.5 text-primary" /> Live Section Header Preview (As seen on site)
                       </span>
-                      <span>ID: {sec.id}</span>
+                      <div className="flex items-center gap-2">
+                        {Boolean(data.is_collapsible) && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                            Collapsible {Boolean(data.default_collapsed) ? '(Starts Closed)' : '(Starts Open)'}
+                          </span>
+                        )}
+                        <span>ID: {sec.id}</span>
+                      </div>
                     </div>
 
                     <div className="text-left relative z-10 py-2">
@@ -860,6 +876,36 @@ function SectionsAdminPage() {
                           onCheckedChange={(checked) => updateField(sec.id, 'is_enabled', checked ? 1 : 0)}
                         />
                       </div>
+
+                      <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/10">
+                        <div>
+                          <Label className="text-xs font-semibold flex items-center gap-1.5">
+                            <Minimize2 className="size-3.5 text-primary" /> Make Section Collapsible on Landing Page
+                          </Label>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Allows website visitors to collapse this section into a compact summary card to reduce page length.
+                          </p>
+                        </div>
+                        <Switch
+                          checked={Boolean(data.is_collapsible)}
+                          onCheckedChange={(checked) => updateField(sec.id, 'is_collapsible', checked ? 1 : 0)}
+                        />
+                      </div>
+
+                      {Boolean(data.is_collapsible) && (
+                        <div className="flex items-center justify-between rounded-lg border border-primary/30 p-4 bg-primary/5 ml-3">
+                          <div>
+                            <Label className="text-xs font-semibold">Collapsed by Default on Page Load</Label>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              When visitors load the homepage, this section will start collapsed with an &quot;Expand Section&quot; button, keeping the landing page compact.
+                            </p>
+                          </div>
+                          <Switch
+                            checked={Boolean(data.default_collapsed)}
+                            onCheckedChange={(checked) => updateField(sec.id, 'default_collapsed', checked ? 1 : 0)}
+                          />
+                        </div>
+                      )}
                     </TabsContent>
                   </Tabs>
 
@@ -989,6 +1035,21 @@ function SectionsAdminPage() {
                 onChange={(e) => setNewSection((prev) => ({ ...prev, subtitle: e.target.value }))}
                 placeholder="Supporting description paragraph..."
                 className="text-xs"
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-3 bg-muted/10">
+              <div>
+                <Label className="text-xs font-semibold">Make Section Collapsible</Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Adds expand/collapse controls on the landing page.
+                </p>
+              </div>
+              <Switch
+                checked={Boolean(newSection.is_collapsible)}
+                onCheckedChange={(checked) =>
+                  setNewSection((prev) => ({ ...prev, is_collapsible: checked ? 1 : 0 }))
+                }
               />
             </div>
           </div>

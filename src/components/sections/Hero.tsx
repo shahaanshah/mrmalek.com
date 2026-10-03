@@ -4,14 +4,17 @@ import React from "react";
 import Image from "@/components/ui/Img";
 import { ArrowRight, MessageSquare } from "lucide-react";
 import { HOMEPAGE_DEFAULTS, parseHeroMetrics, type HomepageContent } from "@/lib/cms/homepage.types";
+import SectionBadge from "@/components/ui/SectionBadge";
+import type { LandingSection } from "@/lib/cms/sections.types";
 
 interface HeroProps {
   onScrollToContact: () => void;
   content?: HomepageContent;
   settings?: Record<string, string>;
+  section?: Partial<LandingSection>;
 }
 
-export default function Hero({ onScrollToContact, content, settings }: HeroProps) {
+export default function Hero({ onScrollToContact, content, settings, section }: HeroProps) {
   const copy = content ?? HOMEPAGE_DEFAULTS;
   const metrics = parseHeroMetrics(copy.hero_metrics);
   return (
@@ -31,32 +34,16 @@ export default function Hero({ onScrollToContact, content, settings }: HeroProps
           {/* Left Column: Headline & Value Prop */}
           <div>
             {/* Identity & Eyebrow */}
-            <div
-              className="reveal stagger-1"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.6rem",
-                padding: "0.35rem 0.95rem",
-                borderRadius: "var(--radius-full)",
-                backgroundColor: "rgba(168, 85, 247, 0.08)",
-                border: "1px solid rgba(168, 85, 247, 0.25)",
-                marginBottom: "1.75rem",
-              }}
-            >
-              <span className="status-dot status-dot--purple" />
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "0.75rem",
-                  letterSpacing: "0.08em",
-                  color: "var(--accent-purple-light)",
-                  textTransform: "uppercase",
-                  fontWeight: 600,
-                }}
-              >
-                {copy.hero_eyebrow}
-              </span>
+            <div className="reveal stagger-1" style={{ marginBottom: "1.75rem" }}>
+              <SectionBadge
+                section={section}
+                kicker={section?.kicker || copy.hero_eyebrow}
+                icon={section?.kicker_icon || 'sparkles'}
+                textColor={section?.kicker_text_color || 'var(--accent-purple-light)'}
+                bgColor={section?.kicker_bg_color || 'rgba(168, 85, 247, 0.08)'}
+                borderColor={section?.kicker_border_color || 'rgba(168, 85, 247, 0.25)'}
+                iconColor={section?.kicker_icon_color || 'var(--accent-purple-light)'}
+              />
             </div>
 
             {/* Editorial Headline */}
@@ -72,8 +59,8 @@ export default function Hero({ onScrollToContact, content, settings }: HeroProps
                 marginBottom: "1.5rem",
               }}
             >
-              {copy.hero_title}{" "}
-              <span className="gradient-text-purple">{copy.hero_highlight}</span>
+              {(section?.main_heading || copy.hero_title)}{" "}
+              <span className="gradient-text-purple">{(section?.highlight_text || copy.hero_highlight)}</span>
             </h1>
 
             {/* Strategic Subtitle */}
@@ -87,7 +74,7 @@ export default function Hero({ onScrollToContact, content, settings }: HeroProps
                 maxWidth: "560px",
               }}
             >
-              {copy.hero_subtitle}
+              {section?.subtitle || copy.hero_subtitle}
             </p>
 
             {/* Action CTAs */}
