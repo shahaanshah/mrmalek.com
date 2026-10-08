@@ -39,7 +39,12 @@ const csrfMiddleware = createCsrfMiddleware({
     const forwardedHost = request.headers.get("x-forwarded-host");
     if (originHost === url.host) return true;
     if (forwardedHost && originHost === forwardedHost) return true;
-    if (originHost === "localhost:8080" || originHost === "127.0.0.1:8080") return true;
+    if (
+      originHost === "localhost:8080" ||
+      originHost === "127.0.0.1:8080" ||
+      originHost === "localhost:3000" ||
+      originHost === "127.0.0.1:3000"
+    ) return true;
     return TRUSTED_HOST_SUFFIXES.some((suffix) => originHost.endsWith(suffix));
   },
 });
