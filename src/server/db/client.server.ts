@@ -13,13 +13,21 @@ export interface SqlExecutor {
 }
 
 export class DatabaseUnavailableError extends Error {
-  constructor() {
-    super('The CMS database is not available in this runtime.');
+  constructor(cause?: unknown) {
+    const detail = cause instanceof Error ? `: ${cause.message}` : cause ? `: ${String(cause)}` : '';
+    super(`The CMS database is not available in this runtime${detail}`);
     this.name = 'DatabaseUnavailableError';
+    if (cause && cause instanceof Error && cause.stack) {
+      this.stack = `${this.stack}\nCaused by: ${cause.stack}`;
+    }
   }
 }
 
-const DB_PATH = process.env['CMS_DB_PATH'] ?? './.data/cms.sqlite';
+function getDbPath(pathModule: typeof import('node:path')): string {
+  const envPath = process.env['CMS_DB_PATH'];
+  if (envPath) return pathModule.isAbsolute(envPath) ? envPath : pathModule.resolve(process.cwd(), envPath);
+  return pathModule.resolve(process.cwd(), '.data/cms.sqlite');
+}
 
 let executorPromise: Promise<SqlExecutor> | null = null;
 
@@ -29,14 +37,21 @@ async function createSqliteExecutor(): Promise<SqlExecutor> {
     import('node:path'),
   ]);
 
-  const dir = path.dirname(DB_PATH);
-  if (dir && !fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const dbPath = getDbPath(path);
+  const dir = path.dirname(dbPath);
+  if (dir && !fs.existsSync(dir)) {
+    try {
+      fs.mkdirSync(dir, { recursive: true, mode: 0o777 });
+    } catch (err) {
+      console.warn('[cms] mkdir failed:', err);
+    }
+  }
 
   // If running in Bun, use built-in bun:sqlite
   if (typeof (globalThis as unknown as { Bun?: unknown }).Bun !== 'undefined') {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { Database } = (await import('bun:sqlite' as string)) as any;
-    const db = new Database(DB_PATH);
+    const db = new Database(dbPath);
     db.run('PRAGMA journal_mode = WAL;');
     db.run('PRAGMA foreign_keys = ON;');
 
@@ -59,7 +74,7 @@ async function createSqliteExecutor(): Promise<SqlExecutor> {
 
   // Otherwise, use Node.js built-in node:sqlite
   const { DatabaseSync } = await import('node:sqlite');
-  const db = new DatabaseSync(DB_PATH);
+  const db = new DatabaseSync(dbPath);
   db.exec('PRAGMA journal_mode = WAL;');
   db.exec('PRAGMA foreign_keys = ON;');
 
@@ -102,8 +117,8 @@ export async function getDb(): Promise<SqlExecutor> {
       try {
         db = await createSqliteExecutor();
       } catch (error) {
-        console.error('[cms] SQLite driver unavailable', error);
-        throw new DatabaseUnavailableError();
+        console.error('[cms] SQLite driver unavailable:', error);
+        throw new DatabaseUnavailableError(error);
       }
       await migrate(db);
       const { seedDatabase } = await import('./seed.server');

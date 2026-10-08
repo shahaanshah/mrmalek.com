@@ -5,19 +5,24 @@ export interface AdminSessionData {
   email?: string;
 }
 
-// Built per call: env is injected per request on edge runtimes.
 function sessionConfig() {
   const password = process.env['CMS_SESSION_SECRET'] || 'mrmalek-secure-session-key-fallback-32chars-minimum!';
-  const isProduction = process.env['NODE_ENV'] === 'production';
+  // Secure cookies require HTTPS. Only enforce 'secure' if explicitly forced via COOKIE_SECURE=true
+  // or FORCE_SSL=true, or if APP_URL starts with https://.
+  // This allows logging in on HTTP testing URLs (e.g. sslip.io or raw VPS IP) while still supporting HTTPS.
+  const isHttps =
+    process.env['COOKIE_SECURE'] === 'true' ||
+    process.env['FORCE_SSL'] === 'true' ||
+    (process.env['APP_URL']?.startsWith('https://') ?? false);
+
   return {
     password,
     name: 'mrmalek-admin',
     maxAge: 60 * 60 * 12,
-    // SameSite=None + secure on production for iframe preview compatibility, Lax on dev
     cookie: {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
+      secure: isHttps,
+      sameSite: 'lax' as const,
       path: '/',
     },
   };

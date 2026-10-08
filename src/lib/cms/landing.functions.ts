@@ -77,10 +77,175 @@ export const getLandingPageData = createServerFn({ method: 'GET' }).handler(asyn
       topics: categories.map((c) => c.name),
     };
   } catch (error) {
-    console.error('[cms] getLandingPageData failed:', error);
-    throw error;
+    console.error('[cms] getLandingPageData failed, serving graceful fallback data:', error);
+    return getFallbackLandingData();
   }
 });
+
+async function getFallbackLandingData() {
+  const [
+    { DEFAULT_LANDING_SECTIONS },
+    { defaultSettings },
+    {
+      clientPartnersData,
+      experienceData,
+      educationData,
+      certificationsData,
+      toolkitData,
+      otherProjectsData,
+      venturesData,
+    },
+    { allCaseStudies, caseMeta },
+  ] = await Promise.all([
+    import('@/lib/cms/sections.types'),
+    import('@/lib/cms/homepage.types'),
+    import('@/data/portfolioData'),
+    import('@/data/caseStudyMeta'),
+  ]);
+
+  const sectionsMap = Object.fromEntries(DEFAULT_LANDING_SECTIONS.map((s) => [s.id, s]));
+
+  const fallbackTestimonials = [
+    {
+      id: 1,
+      author: 'Abdulrahman',
+      role: 'VP of Engineering',
+      company: 'Enterprise B2B Commerce Platform',
+      quote:
+        "Malek bridges the gap between commercial objectives and engineering realities better than anyone I've worked with. He translates high-level executive strategy into clean, prioritized sprint backlogs that developers actually trust.",
+      linkedin: 'https://linkedin.com/in/malekhussein',
+      avatar_url: null,
+      sort_order: 0,
+      created_at: '',
+    },
+    {
+      id: 2,
+      author: 'Arifi',
+      role: 'Lead Technical Architect',
+      company: 'Logistics & Crowd-Shipping Scale-Up',
+      quote:
+        "Under Malek's delivery leadership, our sprint velocity accelerated by 25%. He doesn't just run Scrum ceremonies; he actively dives into technical dependencies, unblocks cross-functional bottlenecks, and ships on time.",
+      linkedin: 'https://linkedin.com/in/malekhussein',
+      avatar_url: null,
+      sort_order: 1,
+      created_at: '',
+    },
+    {
+      id: 3,
+      author: 'Qays Bahormoz',
+      role: 'FinTech Managing Director',
+      company: 'Financial Services & Lending Platform',
+      quote:
+        'A rare product manager who truly understands banking API integrations, payment reliability, and developer experience. He brought structure, speed, and real accountability to our platform rollout.',
+      linkedin: 'https://linkedin.com/in/malekhussein',
+      avatar_url: null,
+      sort_order: 2,
+      created_at: '',
+    },
+  ];
+
+  const fallbackPhases = [
+    {
+      number: '01',
+      title: 'Understand the problem',
+      statement: 'I talk to users, map the business goal, and find the real blockers before we build.',
+      toolchain: ['Research', 'Figma', 'Notion'],
+    },
+    {
+      number: '02',
+      title: 'Design the solution',
+      statement: 'I turn findings into a clear plan: what to build, how the systems connect, and why.',
+      toolchain: ['Specs', 'AWS', 'Postman'],
+    },
+    {
+      number: '03',
+      title: 'Build with the team',
+      statement: 'I run agile delivery with design, engineering and stakeholders focused on one outcome.',
+      toolchain: ['Jira', 'Linear', 'CI/CD'],
+    },
+    {
+      number: '04',
+      title: 'Launch and improve',
+      statement: 'I ship, measure what matters, and use the data to make the product stronger.',
+      toolchain: ['GA4', 'Metabase', 'Scale'],
+    },
+  ];
+
+  return {
+    settings: defaultSettings,
+    content: {},
+    sections: sectionsMap,
+    partners: clientPartnersData.map((p, i) => ({
+      id: i + 1,
+      name: p.name,
+      category: p.category,
+      logo_image: p.logoImage ?? '',
+      logo_text: p.logoText,
+      sort_order: i,
+      linked_case_study_id: null,
+      created_at: '',
+    })),
+    experiences: experienceData.map((e, i) => ({
+      id: i + 1,
+      role: e.role,
+      company: e.company,
+      location: e.location,
+      period: e.period,
+      type: e.type,
+      badge: e.badge ?? null,
+      description: e.description,
+      impact: e.impact ?? null,
+      achievements: e.achievements ? (Array.isArray(e.achievements) ? e.achievements : [e.achievements]) : [],
+      skills: e.skills ? (Array.isArray(e.skills) ? e.skills : [e.skills]) : [],
+      sort_order: i,
+      created_at: '',
+    })),
+    education: educationData.map((ed, i) => ({
+      id: i + 1,
+      degree: ed.degree,
+      institution: ed.institution,
+      location: ed.location,
+      year: ed.year,
+      details: ed.details ? (Array.isArray(ed.details) ? ed.details : [ed.details]) : [],
+      sort_order: i,
+      created_at: '',
+    })),
+    certifications: certificationsData.map((c, i) => ({
+      id: i + 1,
+      name: c.name,
+      issuer: c.issuer,
+      year: c.year,
+      credential_id: c.credentialId ?? null,
+      sort_order: i,
+      created_at: '',
+    })),
+    toolkits: toolkitData.map((t, i) => ({
+      id: i + 1,
+      title: t.title,
+      tools: t.tools ? (Array.isArray(t.tools) ? t.tools : [t.tools]) : [],
+      note: t.note,
+      sort_order: i,
+      created_at: '',
+    })),
+    otherProjects: otherProjectsData.map((p, i) => ({
+      id: i + 1,
+      name: p.name,
+      domain: p.domain,
+      role: p.role,
+      summary: p.summary,
+      logo_image: p.logoImage ?? null,
+      sort_order: i,
+      created_at: '',
+    })),
+    testimonials: fallbackTestimonials,
+    cases: allCaseStudies,
+    caseMetaMap: caseMeta,
+    phases: fallbackPhases,
+    ventures: venturesData,
+    videos: [],
+    topics: ['Product Strategy', 'Agile & Delivery', 'Career', 'Case Study Breakdown'],
+  };
+}
 
 // ─── Admin CRUD Server Functions ───
 
