@@ -109,18 +109,39 @@ async function migrate(db: SqlExecutor) {
 
 /**
  * Returns the shared executor, running migrations and first-run seeding once.
+ * Automatically connects to MySQL if DATABASE_URL or MYSQL_HOST is provided,
+ * otherwise falls back to SQLite.
  */
 export async function getDb(): Promise<SqlExecutor> {
   if (!executorPromise) {
     executorPromise = (async () => {
       let db: SqlExecutor;
-      try {
-        db = await createSqliteExecutor();
-      } catch (error) {
-        console.error('[cms] SQLite driver unavailable:', error);
-        throw new DatabaseUnavailableError(error);
+      const databaseUrl = process.env['DATABASE_URL'];
+      const hasMysqlConfig =
+        (databaseUrl && (databaseUrl.startsWith('mysql://') || databaseUrl.startsWith('mysql:'))) ||
+        Boolean(process.env['MYSQL_HOST'] || process.env['DB_HOST']);
+
+      if (hasMysqlConfig) {
+        console.log('[cms] Connecting to MySQL database...');
+        try {
+          const { createMysqlExecutor, initMysqlSchema } = await import('./mysql.server');
+          db = await createMysqlExecutor(databaseUrl);
+          await initMysqlSchema(db);
+          console.log('[cms] Connected to MySQL and initialized schema successfully.');
+        } catch (error) {
+          console.error('[cms] Failed to connect to MySQL:', error);
+          throw new DatabaseUnavailableError(error);
+        }
+      } else {
+        try {
+          db = await createSqliteExecutor();
+          await migrate(db);
+        } catch (error) {
+          console.error('[cms] SQLite driver unavailable:', error);
+          throw new DatabaseUnavailableError(error);
+        }
       }
-      await migrate(db);
+
       const { seedDatabase } = await import('./seed.server');
       await seedDatabase(db);
       return db;
