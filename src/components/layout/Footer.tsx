@@ -291,36 +291,8 @@ export default function Footer({ onOpenConsultation, settings }: FooterProps) {
               paddingTop: '2rem',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                &copy; {new Date().getFullYear()} Malek Hussein. All rights reserved.
-              </div>
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  padding: '0.2rem 0.65rem',
-                  borderRadius: '9999px',
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
-                  fontFamily: 'var(--font-mono)',
-                  color: '#10b981',
-                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                  border: '1px solid rgba(16, 185, 129, 0.25)',
-                }}
-              >
-                <span
-                  style={{
-                    width: '6px',
-                    height: '6px',
-                    borderRadius: '50%',
-                    backgroundColor: '#10b981',
-                    boxShadow: '0 0 6px #10b981',
-                  }}
-                />
-                Automated Deployment Live
-              </span>
+            <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+              &copy; {new Date().getFullYear()} Malek Hussein. All rights reserved.
             </div>
 
             {/* Back to Top */}
