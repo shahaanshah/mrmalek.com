@@ -27,3 +27,7 @@ npm run dev
 - TypeScript
 - React
 - Tailwind CSS
+
+## Deployment
+
+Automated deployments are managed via aaPanel Git Manager and Webhook.
