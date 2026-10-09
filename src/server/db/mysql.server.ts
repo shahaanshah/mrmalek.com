@@ -6,14 +6,20 @@ import type { SqlExecutor } from './client.server';
 export function adaptQueryForMysql(sql: string): string {
   let adapted = sql
     // Normalize datetime/date functions
-    .replace(/datetime\('now'\)/gi, 'CURRENT_TIMESTAMP')
-    .replace(/date\('now'\)/gi, 'CURRENT_DATE')
+    .replace(/datetime\(['"]now['"]\)/gi, 'CURRENT_TIMESTAMP')
+    .replace(/date\(['"]now['"]\)/gi, 'CURRENT_DATE')
     // Insert ignore
     .replace(/INSERT\s+OR\s+IGNORE/gi, 'INSERT IGNORE')
     // SQLite upsert ON CONFLICT ... DO UPDATE SET to MySQL ON DUPLICATE KEY UPDATE
     .replace(/ON\s+CONFLICT\s*\([^)]*\)\s*DO\s+UPDATE\s+SET/gi, 'ON DUPLICATE KEY UPDATE')
     // SQLite excluded.column to MySQL VALUES(column)
-    .replace(/excluded\.(\w+)/gi, 'VALUES($1)');
+    .replace(/excluded\.(\w+)/gi, 'VALUES($1)')
+    // Quote MySQL reserved keyword `key` in queries
+    .replace(/site_settings\s*\(\s*`?key`?\s*,/gi, 'site_settings (`key`,')
+    .replace(/SELECT\s+`?key`?\s*,/gi, 'SELECT `key`,')
+    .replace(/WHERE\s+`?key`?\s*=/gi, 'WHERE `key` =')
+    .replace(/WHERE\s+`?key`?\s+LIKE/gi, 'WHERE `key` LIKE')
+    .replace(/\bSET\s+`?key`?\s*=/gi, 'SET `key` =');
 
   return adapted;
 }

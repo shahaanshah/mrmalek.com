@@ -107,6 +107,34 @@ async function migrate(db: SqlExecutor) {
   }
 }
 
+async function ensureEnvLoaded(): Promise<void> {
+  if (process.env['DATABASE_URL'] || process.env['MYSQL_HOST'] || process.env['DB_HOST']) return;
+  try {
+    const [fs, path] = await Promise.all([import('node:fs'), import('node:path')]);
+    const envPath = path.resolve(process.cwd(), '.env');
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf8');
+      for (const rawLine of content.split('\n')) {
+        const line = rawLine.trim();
+        if (!line || line.startsWith('#')) continue;
+        const eqIdx = line.indexOf('=');
+        if (eqIdx > 0) {
+          const key = line.slice(0, eqIdx).trim();
+          let val = line.slice(eqIdx + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          if (process.env[key] === undefined) {
+            process.env[key] = val;
+          }
+        }
+      }
+    }
+  } catch {
+    // Non-fatal
+  }
+}
+
 /**
  * Returns the shared executor, running migrations and first-run seeding once.
  * Automatically connects to MySQL if DATABASE_URL or MYSQL_HOST is provided,
@@ -115,6 +143,7 @@ async function migrate(db: SqlExecutor) {
 export async function getDb(): Promise<SqlExecutor> {
   if (!executorPromise) {
     executorPromise = (async () => {
+      await ensureEnvLoaded();
       let db: SqlExecutor;
       const databaseUrl = process.env['DATABASE_URL'];
       const hasMysqlConfig =

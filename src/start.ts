@@ -23,7 +23,13 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 // Hosts the app is legitimately served from. Behind the Lovable preview proxy
 // the request URL is the internal host, so a plain origin === url comparison
 // rejects genuine same-site requests (POST server fns got 403 Forbidden).
-const TRUSTED_HOST_SUFFIXES = [".lovable.app", ".lovableproject.com", ".lovable.dev"];
+const TRUSTED_HOST_SUFFIXES = [
+  ".lovable.app",
+  ".lovableproject.com",
+  ".lovable.dev",
+  "malekpm.com",
+  ".malekpm.com",
+];
 
 const csrfMiddleware = createCsrfMiddleware({
   filter: (ctx) => ctx.handlerType === "serverFn",
@@ -43,7 +49,9 @@ const csrfMiddleware = createCsrfMiddleware({
       originHost === "localhost:8080" ||
       originHost === "127.0.0.1:8080" ||
       originHost === "localhost:3000" ||
-      originHost === "127.0.0.1:3000"
+      originHost === "127.0.0.1:3000" ||
+      originHost === "malekpm.com" ||
+      originHost.endsWith(".malekpm.com")
     ) return true;
     return TRUSTED_HOST_SUFFIXES.some((suffix) => originHost.endsWith(suffix));
   },

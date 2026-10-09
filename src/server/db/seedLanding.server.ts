@@ -7,6 +7,7 @@ import {
   toolkitData,
   otherProjectsData,
 } from '@/data/portfolioData';
+import { DEFAULT_LANDING_SECTIONS } from '@/lib/cms/sections.types';
 
 const DEFAULT_TESTIMONIALS = [
   {
@@ -157,16 +158,56 @@ export async function seedLandingContent(db: SqlExecutor): Promise<void> {
   };
 
   for (const [key, val] of Object.entries(defaultSettings)) {
-    await db.run('INSERT OR IGNORE INTO site_settings (key, value) VALUES (?, ?)', [key, val]);
+    await db.run('INSERT OR IGNORE INTO site_settings (`key`, value) VALUES (?, ?)', [key, val]);
   }
 
   // Self-heal: If site_logo in database was previously set to the partner company logo, fix to official logo
-  const currentLogo = await db.get<{ value: string }>('SELECT value FROM site_settings WHERE key = ?', ['site_logo']);
+  const currentLogo = await db.get<{ value: string }>('SELECT value FROM site_settings WHERE `key` = ?', ['site_logo']);
   if (!currentLogo || currentLogo.value === '/images/companies/aslagrodrain.png' || !currentLogo.value) {
-    await db.run('INSERT INTO site_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = ?', [
+    await db.run('INSERT INTO site_settings (`key`, value) VALUES (?, ?) ON CONFLICT(`key`) DO UPDATE SET value = ?', [
       'site_logo',
       '/images/malek-logo.png',
       '/images/malek-logo.png',
     ]);
+  }
+
+  // 9. Landing Sections (Hero, Bio, Process, Case Studies, etc.)
+  if ((await countRows(db, 'landing_sections')) === 0) {
+    for (const sec of DEFAULT_LANDING_SECTIONS) {
+      await db.run(
+        `INSERT OR IGNORE INTO landing_sections (
+          id, title, description, kicker, kicker_icon, kicker_logo_url,
+          kicker_font_size, kicker_font_family, kicker_font_weight,
+          kicker_text_color, kicker_bg_color, kicker_border_color, kicker_icon_color,
+          kicker_letter_spacing, kicker_text_transform, kicker_enabled,
+          main_heading, highlight_text, subtitle, is_enabled, is_collapsible, default_collapsed, sort_order
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          sec.id,
+          sec.title,
+          sec.description ?? '',
+          sec.kicker ?? '',
+          sec.kicker_icon ?? 'sparkles',
+          sec.kicker_logo_url ?? '',
+          sec.kicker_font_size ?? '0.75rem',
+          sec.kicker_font_family ?? 'mono',
+          sec.kicker_font_weight ?? '600',
+          sec.kicker_text_color ?? 'var(--accent-gold-light)',
+          sec.kicker_bg_color ?? 'var(--accent-gold-bg)',
+          sec.kicker_border_color ?? 'var(--accent-gold-border)',
+          sec.kicker_icon_color ?? 'var(--accent-gold)',
+          sec.kicker_letter_spacing ?? '0.08em',
+          sec.kicker_text_transform ?? 'uppercase',
+          sec.kicker_enabled ?? 1,
+          sec.main_heading ?? '',
+          sec.highlight_text ?? '',
+          sec.subtitle ?? '',
+          sec.is_enabled ?? 1,
+          sec.is_collapsible ?? 0,
+          sec.default_collapsed ?? 0,
+          sec.sort_order ?? 0,
+        ],
+      );
+    }
   }
 }
