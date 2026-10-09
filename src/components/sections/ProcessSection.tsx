@@ -39,7 +39,7 @@ interface ProcessSectionProps {
 }
 
 export default function ProcessSection({ content, phases, section }: ProcessSectionProps) {
-  const copy = content ?? HOMEPAGE_DEFAULTS;
+  const copy = { ...HOMEPAGE_DEFAULTS, ...(content || {}) };
   const steps = phases && phases.length ? phases : fallbackPhases;
 
   return (

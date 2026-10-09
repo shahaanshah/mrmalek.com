@@ -121,6 +121,24 @@ export const HOMEPAGE_DEFAULTS: HomepageContent = {
   cv_banner_file_url: "",
 };
 
+export const DEFAULT_SITE_SETTINGS: Record<string, string> = {
+  site_title: "Malek Hussein | Technical Product Leader & Digital Builder",
+  site_description:
+    "Portfolio of Malek Hussein — Technical Product Leader based in Ottawa, Canada. Leading complex digital products across SaaS, e-commerce, fintech, and enterprise platforms.",
+  brand_name: "Mr. Malek",
+  site_logo: "/images/malek-logo.png",
+  site_favicon: "/favicon.ico",
+  cv_url: "/cv-malek-hussein.pdf",
+  contact_email: "contact@mrmalek.com",
+  contact_phone: "+1 343 552 7477",
+  whatsapp_phone: "+13435527477",
+  status_badge: "Ottawa, ON • Open to Opportunities",
+  location: "Ottawa, Ontario, Canada",
+  linkedin_url: "https://linkedin.com/in/malekhussein",
+  x_url: "https://x.com/mrmalek",
+  youtube_url: "https://youtube.com",
+};
+
 export const homepageSchema = z.object(
   Object.fromEntries(HOMEPAGE_KEYS.map((key) => [key, z.string().max(2000).optional()])) as Record<
     HomepageKey,
@@ -210,7 +228,15 @@ export interface HeroMetric {
   sub: string;
 }
 
-export function parseHeroMetrics(raw: string): HeroMetric[] {
+export function parseHeroMetrics(raw?: string | null): HeroMetric[] {
+  if (!raw || typeof raw !== "string") {
+    return [
+      { value: "8+ Years", label: "Product & Engineering", sub: "Enterprise & Scale-Ups" },
+      { value: "10+", label: "Products Shipped", sub: "FinTech, GovTech, SaaS" },
+      { value: "39%", label: "Operational Gains", sub: "Measurable Delivery Results" },
+      { value: "3", label: "Ventures Founded", sub: "Product & AI Focus" },
+    ];
+  }
   return raw
     .split("\n")
     .map((line) => line.trim())

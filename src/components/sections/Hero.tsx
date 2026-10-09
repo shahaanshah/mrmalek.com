@@ -15,7 +15,7 @@ interface HeroProps {
 }
 
 export default function Hero({ onScrollToContact, content, settings, section }: HeroProps) {
-  const copy = content ?? HOMEPAGE_DEFAULTS;
+  const copy = { ...HOMEPAGE_DEFAULTS, ...(content || {}) };
   const metrics = parseHeroMetrics(copy.hero_metrics);
   return (
     <section className="hero" style={{ paddingTop: "8.5rem", paddingBottom: "4.5rem", position: "relative" }}>

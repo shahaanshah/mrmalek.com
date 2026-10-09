@@ -85,7 +85,7 @@ export const getLandingPageData = createServerFn({ method: 'GET' }).handler(asyn
 async function getFallbackLandingData() {
   const [
     { DEFAULT_LANDING_SECTIONS },
-    { defaultSettings },
+    { HOMEPAGE_DEFAULTS, DEFAULT_SITE_SETTINGS },
     {
       clientPartnersData,
       experienceData,
@@ -172,8 +172,8 @@ async function getFallbackLandingData() {
   ];
 
   return {
-    settings: defaultSettings,
-    content: {},
+    settings: DEFAULT_SITE_SETTINGS,
+    content: HOMEPAGE_DEFAULTS,
     sections: sectionsMap,
     partners: clientPartnersData.map((p, i) => ({
       id: i + 1,

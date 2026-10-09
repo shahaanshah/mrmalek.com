@@ -25,7 +25,7 @@ interface VentureEcosystemProps {
 }
 
 export default function VentureEcosystem({ content, ventures, section }: VentureEcosystemProps = {}) {
-  const copy = content ?? HOMEPAGE_DEFAULTS;
+  const copy = { ...HOMEPAGE_DEFAULTS, ...(content || {}) };
   const items = ventures && ventures.length ? ventures : venturesData;
   const [selectedVenture, setSelectedVenture] = useState<Venture | null>(null);
 

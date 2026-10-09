@@ -90,7 +90,7 @@ export default function CareerMatrix({
   settings,
   section,
 }: CareerMatrixProps) {
-  const copy = content ?? HOMEPAGE_DEFAULTS;
+  const copy = { ...HOMEPAGE_DEFAULTS, ...(content || {}) };
   const cvDownloadUrl = copy.cv_banner_file_url || settings?.['cv_resume_pdf'] || '/cv-malek-hussein.pdf';
   const caseList = cases && cases.length ? cases : allCaseStudies;
   const metaMap = meta && Object.keys(meta).length ? meta : caseMeta;
