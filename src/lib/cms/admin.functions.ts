@@ -33,13 +33,25 @@ async function auditVideo(action: string, entityId: number | null, summary: stri
 export const adminLogin = createServerFn({ method: 'POST' })
   .validator((input: unknown) => loginSchema.parse(input))
   .handler(async ({ data }) => {
-    const { adminRepository } = await import('@/server/repositories/adminRepository.server');
-    const { getAdminSession } = await import('@/server/auth/session.server');
-    const admin = await adminRepository.verifyCredentials(data.email, data.password);
-    if (!admin) return { ok: false as const, error: 'Incorrect email or password' };
-    const session = await getAdminSession();
-    await session.update({ adminId: admin.id, email: admin.email });
-    return { ok: true as const };
+    try {
+      console.log(`[adminLogin] Attempting sign-in for: ${data.email}`);
+      const { adminRepository } = await import('@/server/repositories/adminRepository.server');
+      const { getAdminSession } = await import('@/server/auth/session.server');
+      const admin = await adminRepository.verifyCredentials(data.email, data.password);
+      if (!admin) {
+        console.warn(`[adminLogin] Invalid credentials for: ${data.email}`);
+        return { ok: false as const, error: 'Incorrect email or password' };
+      }
+      console.log(`[adminLogin] Verified admin id ${admin.id}, creating session...`);
+      const session = await getAdminSession();
+      await session.update({ adminId: admin.id, email: admin.email });
+      console.log(`[adminLogin] Session established successfully for: ${admin.email}`);
+      return { ok: true as const };
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error('[adminLogin] Unexpected sign-in error:', err);
+      return { ok: false as const, error: errorMsg ? `Sign in error: ${errorMsg}` : 'Could not sign in right now. Please try again.' };
+    }
   });
 
 export const adminLogout = createServerFn({ method: 'POST' }).handler(async () => {

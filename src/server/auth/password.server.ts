@@ -35,12 +35,42 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
+  if (!stored || !password) return false;
+
+  // 1. Support scrypt format (<saltHex>:<hashHex>) used by scripts/init-db.mjs
+  if (stored.includes(':') && !stored.includes('$')) {
+    try {
+      const [salt, expectedHash] = stored.split(':');
+      if (salt && expectedHash) {
+        const nodeCrypto = await import('node:crypto');
+        const derived = nodeCrypto.scryptSync(password, salt, 64).toString('hex');
+        if (
+          derived.length === expectedHash.length &&
+          nodeCrypto.timingSafeEqual(Buffer.from(derived, 'hex'), Buffer.from(expectedHash, 'hex'))
+        ) {
+          return true;
+        }
+      }
+    } catch (err) {
+      console.warn('[auth] Error checking scrypt password hash:', err);
+    }
+  }
+
+  // 2. Support standard PBKDF2 format: pbkdf2$<iterations>$<saltB64>$<hashB64>
   const [scheme, iterationsRaw, saltB64, hashB64] = stored.split('$');
-  if (scheme !== 'pbkdf2' || !iterationsRaw || !saltB64 || !hashB64) return false;
-  const computed = await derive(password, fromB64(saltB64), Number(iterationsRaw));
-  // Constant-time comparison.
-  if (computed.length !== hashB64.length) return false;
-  let diff = 0;
-  for (let i = 0; i < computed.length; i += 1) diff |= computed.charCodeAt(i) ^ hashB64.charCodeAt(i);
-  return diff === 0;
+  if (scheme === 'pbkdf2' && iterationsRaw && saltB64 && hashB64) {
+    try {
+      const computed = await derive(password, fromB64(saltB64), Number(iterationsRaw));
+      if (computed.length !== hashB64.length) return false;
+      let diff = 0;
+      for (let i = 0; i < computed.length; i += 1) diff |= computed.charCodeAt(i) ^ hashB64.charCodeAt(i);
+      return diff === 0;
+    } catch (err) {
+      console.warn('[auth] Error checking PBKDF2 password hash:', err);
+      return false;
+    }
+  }
+
+  return false;
 }
+

@@ -2,11 +2,20 @@ import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/r
 
 import { renderErrorPage } from "./lib/error-page";
 
-const errorMiddleware = createMiddleware().server(async ({ next }) => {
+const errorMiddleware = createMiddleware().server(async ({ next, pathname, request }) => {
   try {
     return await next();
   } catch (error) {
     if (error != null && typeof error === "object" && "statusCode" in error) {
+      throw error;
+    }
+    // If this is a server function or API RPC call, rethrow so TanStack Start
+    // handles serialization properly instead of returning an HTML error page.
+    if (
+      pathname?.startsWith('/_server') ||
+      pathname?.startsWith('/api') ||
+      request?.headers.get('accept')?.includes('application/json')
+    ) {
       throw error;
     }
     console.error(error);
@@ -33,6 +42,7 @@ const TRUSTED_HOST_SUFFIXES = [
 
 const csrfMiddleware = createCsrfMiddleware({
   filter: (ctx) => ctx.handlerType === "serverFn",
+  secFetchSite: (val) => val === "same-origin" || val === "same-site" || val === "none",
   origin: (origin, ctx) => {
     let originHost: string;
     try {
@@ -51,6 +61,8 @@ const csrfMiddleware = createCsrfMiddleware({
       originHost === "localhost:3000" ||
       originHost === "127.0.0.1:3000" ||
       originHost === "malekpm.com" ||
+      originHost === "207.180.221.11" ||
+      originHost === "207.180.221.11:3000" ||
       originHost.endsWith(".malekpm.com")
     ) return true;
     return TRUSTED_HOST_SUFFIXES.some((suffix) => originHost.endsWith(suffix));

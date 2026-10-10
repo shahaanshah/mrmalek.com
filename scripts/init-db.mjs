@@ -38,11 +38,13 @@ const database = process.env['MYSQL_DATABASE'] || 'malekpm';
 const adminEmail = (process.env['CMS_ADMIN_EMAIL'] || 'admin@mrmalek.com').toLowerCase();
 const adminPass = process.env['CMS_ADMIN_INITIAL_PASSWORD'] || 'admin123456';
 
-async function hashPassword(plain) {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const derivedKey = crypto.scryptSync(plain, salt, 64);
-  return `${salt}:${derivedKey.toString('hex')}`;
+function hashPassword(plain) {
+  const salt = crypto.randomBytes(16);
+  const iterations = 120000;
+  const hash = crypto.pbkdf2Sync(plain, salt, iterations, 32, 'sha256');
+  return `pbkdf2$${iterations}$${salt.toString('base64')}$${hash.toString('base64')}`;
 }
+
 
 async function run() {
   console.log('🔄 Connecting to MySQL...');

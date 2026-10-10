@@ -6,7 +6,12 @@ export interface AdminSessionData {
 }
 
 function sessionConfig() {
-  const password = process.env['CMS_SESSION_SECRET'] || 'mrmalek-secure-session-key-fallback-32chars-minimum!';
+  const rawSecret = process.env['CMS_SESSION_SECRET'] || 'mrmalek-secure-session-key-fallback-32chars-minimum!';
+  // iron-webcrypto requires passwords to be at least 32 characters long.
+  const password = rawSecret.length >= 32
+    ? rawSecret
+    : rawSecret.padEnd(32, '!@#$mrmalek-secure-padding-key32');
+
   // Secure cookies require HTTPS. Only enforce 'secure' if explicitly forced via COOKIE_SECURE=true
   // or FORCE_SSL=true, or if APP_URL starts with https://.
   // This allows logging in on HTTP testing URLs (e.g. sslip.io or raw VPS IP) while still supporting HTTPS.

@@ -35,8 +35,10 @@ function LoginPage() {
       }
       await router.invalidate();
       navigate({ to: '/admin', replace: true });
-    } catch {
-      setError('Could not sign in right now. Please try again.');
+    } catch (err: unknown) {
+      console.error('Sign in error:', err);
+      const msg = err instanceof Error ? err.message : String(err || '');
+      setError(msg ? `Sign in error: ${msg}` : 'Could not sign in right now. Please try again.');
     } finally {
       setBusy(false);
     }

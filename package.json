@@ -12,7 +12,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "db:init": "node scripts/init-db.mjs",
-    "db:admin": "bun run ./scripts/set-admin.ts"
+    "db:admin": "node ./scripts/set-admin.mjs"
   },
   "engines": {
     "node": ">=22.0.0"
