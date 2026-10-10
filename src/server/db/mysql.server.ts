@@ -351,8 +351,132 @@ export async function createMysqlExecutor(databaseUrl?: string): Promise<SqlExec
   };
 }
 
+const REQUIRED_COLUMNS: Array<{ table: string; column: string; definition: string }> = [
+  // content_items
+  { table: 'content_items', column: 'publish_date', definition: 'VARCHAR(50) NULL' },
+  { table: 'content_items', column: 'published_at', definition: 'VARCHAR(50) NULL' },
+  { table: 'content_items', column: 'sort_order', definition: 'INT NOT NULL DEFAULT 0' },
+  { table: 'content_items', column: 'is_featured', definition: 'INT NOT NULL DEFAULT 0' },
+  { table: 'content_items', column: 'category_id', definition: 'INT NULL' },
+
+  // case_study_details
+  { table: 'case_study_details', column: 'industry', definition: 'VARCHAR(255) NULL' },
+  { table: 'case_study_details', column: 'role', definition: 'VARCHAR(255) NULL' },
+  { table: 'case_study_details', column: 'period', definition: 'VARCHAR(255) NULL' },
+  { table: 'case_study_details', column: 'image_url', definition: 'TEXT NULL' },
+  { table: 'case_study_details', column: 'problem', definition: 'LONGTEXT NULL' },
+  { table: 'case_study_details', column: 'architecture', definition: 'LONGTEXT NULL' },
+  { table: 'case_study_details', column: 'decisions', definition: 'LONGTEXT NULL' },
+  { table: 'case_study_details', column: 'outcomes', definition: 'LONGTEXT NULL' },
+  { table: 'case_study_details', column: 'results', definition: 'LONGTEXT NULL' },
+  { table: 'case_study_details', column: 'solution', definition: 'LONGTEXT NULL' },
+  { table: 'case_study_details', column: 'tags', definition: 'TEXT NULL' },
+  { table: 'case_study_details', column: 'aliases', definition: 'TEXT NULL' },
+
+  // venture_details
+  { table: 'venture_details', column: 'website_url', definition: 'TEXT NULL' },
+  { table: 'venture_details', column: 'logo_url', definition: 'TEXT NULL' },
+  { table: 'venture_details', column: 'venture_status', definition: 'VARCHAR(64) NULL' },
+  { table: 'venture_details', column: 'cover_image', definition: 'TEXT NULL' },
+
+  // framework_details
+  { table: 'framework_details', column: 'image_url', definition: 'TEXT NULL' },
+  { table: 'framework_details', column: 'step_label', definition: 'VARCHAR(64) NULL' },
+
+  // client_partners
+  { table: 'client_partners', column: 'linked_case_study_id', definition: 'INT NULL' },
+
+  // experiences
+  { table: 'experiences', column: 'type', definition: "VARCHAR(64) NOT NULL DEFAULT 'Full-time'" },
+  { table: 'experiences', column: 'badge', definition: 'VARCHAR(255) NULL' },
+  { table: 'experiences', column: 'impact', definition: 'TEXT NULL' },
+  { table: 'experiences', column: 'achievements', definition: 'LONGTEXT NULL' },
+  { table: 'experiences', column: 'skills', definition: 'TEXT NULL' },
+
+  // media
+  { table: 'media', column: 'file_name', definition: 'VARCHAR(255) NULL' },
+  { table: 'media', column: 'thumbnail_url', definition: 'TEXT NULL' },
+  { table: 'media', column: 'alt_text', definition: 'TEXT NULL' },
+  { table: 'media', column: 'usage_note', definition: 'TEXT NULL' },
+];
+
 export async function initMysqlSchema(db: SqlExecutor): Promise<void> {
+  // 1. Detect and migrate legacy table schemas if needed
+  try {
+    const seoCols = await db.all<{ COLUMN_NAME: string }>(
+      `SELECT COLUMN_NAME FROM information_schema.COLUMNS 
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'seo_meta' AND COLUMN_NAME = 'entity_type'`,
+    );
+    if (seoCols.length === 0) {
+      const tableExists = await db.all<{ TABLE_NAME: string }>(
+        `SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'seo_meta'`,
+      );
+      if (tableExists.length > 0) {
+        console.log('[mysql] Old seo_meta schema detected, recreating...');
+        await db.exec('DROP TABLE IF EXISTS seo_meta');
+      }
+    }
+  } catch {
+    // Non-fatal
+  }
+
+  try {
+    const revCols = await db.all<{ COLUMN_NAME: string }>(
+      `SELECT COLUMN_NAME FROM information_schema.COLUMNS 
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'content_revisions' AND COLUMN_NAME = 'entity_type'`,
+    );
+    if (revCols.length === 0) {
+      const tableExists = await db.all<{ TABLE_NAME: string }>(
+        `SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'content_revisions'`,
+      );
+      if (tableExists.length > 0) {
+        console.log('[mysql] Old content_revisions schema detected, recreating...');
+        await db.exec('DROP TABLE IF EXISTS content_revisions');
+      }
+    }
+  } catch {
+    // Non-fatal
+  }
+
+  try {
+    const mediaCols = await db.all<{ COLUMN_NAME: string }>(
+      `SELECT COLUMN_NAME FROM information_schema.COLUMNS 
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'media' AND COLUMN_NAME = 'file_name'`,
+    );
+    if (mediaCols.length === 0) {
+      const tableExists = await db.all<{ TABLE_NAME: string }>(
+        `SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'media'`,
+      );
+      if (tableExists.length > 0) {
+        console.log('[mysql] Old media schema detected, recreating...');
+        await db.exec('DROP TABLE IF EXISTS media');
+      }
+    }
+  } catch {
+    // Non-fatal
+  }
+
+  // 2. Execute table creation statements
   for (const statement of MYSQL_SCHEMA_STATEMENTS) {
     await db.exec(statement);
   }
+
+  // 3. Ensure all required columns exist in existing tables
+  for (const { table, column, definition } of REQUIRED_COLUMNS) {
+    try {
+      const cols = await db.all<{ COLUMN_NAME: string }>(
+        `SELECT COLUMN_NAME FROM information_schema.COLUMNS 
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+        [table, column],
+      );
+      if (cols.length === 0) {
+        console.log(`[mysql] Adding missing column ${column} to ${table}...`);
+        await db.exec(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${definition}`);
+        console.log(`[mysql] Added column ${column} to ${table} successfully.`);
+      }
+    } catch (err) {
+      console.warn(`[mysql] Error checking/adding column ${column} on ${table}:`, err);
+    }
+  }
 }
+
