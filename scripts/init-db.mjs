@@ -384,13 +384,15 @@ async function run() {
     }
   }
 
-  // Seed default admin
-  const hashed = hashPassword(adminPass);
-  await pool.query(
-    'INSERT INTO admins (email, password_hash) VALUES (?, ?) ON DUPLICATE KEY UPDATE password_hash = ?',
-    [adminEmail, hashed, hashed]
-  );
-  console.log(`✅ Admin account configured: ${adminEmail}`);
+  // Seed default admin (only if not already existing - NEVER reset existing admin password)
+  const [existingAdmins] = await pool.query('SELECT id FROM admins WHERE email = ?', [adminEmail]);
+  if (!Array.isArray(existingAdmins) || existingAdmins.length === 0) {
+    const hashed = hashPassword(adminPass);
+    await pool.query('INSERT INTO admins (email, password_hash) VALUES (?, ?)', [adminEmail, hashed]);
+    console.log(`✅ Default admin account created: ${adminEmail}`);
+  } else {
+    console.log(`ℹ️ Admin account already exists: ${adminEmail} (password preserved)`);
+  }
 
   // Fetch created tables
   const [tables] = await pool.query('SHOW TABLES');

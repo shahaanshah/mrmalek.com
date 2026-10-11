@@ -401,67 +401,12 @@ const REQUIRED_COLUMNS: Array<{ table: string; column: string; definition: strin
 ];
 
 export async function initMysqlSchema(db: SqlExecutor): Promise<void> {
-  // 1. Detect and migrate legacy table schemas if needed
-  try {
-    const seoCols = await db.all<{ COLUMN_NAME: string }>(
-      `SELECT COLUMN_NAME FROM information_schema.COLUMNS 
-       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'seo_meta' AND COLUMN_NAME = 'entity_type'`,
-    );
-    if (seoCols.length === 0) {
-      const tableExists = await db.all<{ TABLE_NAME: string }>(
-        `SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'seo_meta'`,
-      );
-      if (tableExists.length > 0) {
-        console.log('[mysql] Old seo_meta schema detected, recreating...');
-        await db.exec('DROP TABLE IF EXISTS seo_meta');
-      }
-    }
-  } catch {
-    // Non-fatal
-  }
-
-  try {
-    const revCols = await db.all<{ COLUMN_NAME: string }>(
-      `SELECT COLUMN_NAME FROM information_schema.COLUMNS 
-       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'content_revisions' AND COLUMN_NAME = 'entity_type'`,
-    );
-    if (revCols.length === 0) {
-      const tableExists = await db.all<{ TABLE_NAME: string }>(
-        `SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'content_revisions'`,
-      );
-      if (tableExists.length > 0) {
-        console.log('[mysql] Old content_revisions schema detected, recreating...');
-        await db.exec('DROP TABLE IF EXISTS content_revisions');
-      }
-    }
-  } catch {
-    // Non-fatal
-  }
-
-  try {
-    const mediaCols = await db.all<{ COLUMN_NAME: string }>(
-      `SELECT COLUMN_NAME FROM information_schema.COLUMNS 
-       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'media' AND COLUMN_NAME = 'file_name'`,
-    );
-    if (mediaCols.length === 0) {
-      const tableExists = await db.all<{ TABLE_NAME: string }>(
-        `SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'media'`,
-      );
-      if (tableExists.length > 0) {
-        console.log('[mysql] Old media schema detected, recreating...');
-        await db.exec('DROP TABLE IF EXISTS media');
-      }
-    }
-  } catch {
-    // Non-fatal
-  }
-
-  // 2. Execute table creation statements
+  // 1. Execute table creation statements (non-destructive: CREATE TABLE IF NOT EXISTS)
   for (const statement of MYSQL_SCHEMA_STATEMENTS) {
     await db.exec(statement);
   }
 
-  // 3. Ensure all required columns exist in existing tables
+  // 2. Ensure all required columns exist in existing tables (non-destructive: ADD COLUMN)
   for (const { table, column, definition } of REQUIRED_COLUMNS) {
     try {
       const cols = await db.all<{ COLUMN_NAME: string }>(

@@ -51,21 +51,23 @@ const SEED_VIDEOS = [
 ];
 
 export async function seedDatabase(db: SqlExecutor): Promise<void> {
-  // Admin account - ensure default admin exists and credentials match
+  // Admin account - only create default admin if no admin exists for this email
   const email = (process.env['CMS_ADMIN_EMAIL'] ?? 'admin@mrmalek.com').toLowerCase();
   const password = process.env['CMS_ADMIN_INITIAL_PASSWORD'] || 'admin123456';
-  const existingAdmin = await db.get<{ id: number }>('SELECT id FROM admins WHERE email = ?', [email]);
+  const existingAdmin = await db.get<{ id: number; password_hash: string }>('SELECT id, password_hash FROM admins WHERE email = ?', [email]);
   if (!existingAdmin) {
     await db.run('INSERT INTO admins (email, password_hash) VALUES (?, ?)', [
       email,
       await hashPassword(password),
     ]);
-  } else {
+  } else if (!existingAdmin.password_hash) {
+    // Only set password if the admin row somehow exists without a password hash
     await db.run('UPDATE admins SET password_hash = ? WHERE id = ?', [
       await hashPassword(password),
       existingAdmin.id,
     ]);
   }
+
 
   // Categories
   for (const name of DEFAULT_CATEGORIES) {
