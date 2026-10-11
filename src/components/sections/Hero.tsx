@@ -130,7 +130,7 @@ export default function Hero({ onScrollToContact, content, settings, section }: 
                 sizes="(max-width: 768px) 100vw, 480px"
                 style={{
                   objectFit: "contain",
-                  objectPosition: "bottom center",
+                  objectPosition: "center center",
                   filter: "drop-shadow(0 20px 40px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 30px rgba(168, 85, 247, 0.15))",
                   maskImage: "linear-gradient(to bottom, black 80%, transparent 100%)",
                   WebkitMaskImage: "linear-gradient(to bottom, black 80%, transparent 100%)",
