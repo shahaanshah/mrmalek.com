@@ -332,4 +332,23 @@ export const migrations: Migration[] = [
       ALTER TABLE landing_sections ADD COLUMN default_collapsed INTEGER NOT NULL DEFAULT 0;
     `,
   },
+  {
+    name: '009_contact_submissions',
+    sql: `
+      CREATE TABLE IF NOT EXISTS contact_submissions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        phone TEXT,
+        topic TEXT,
+        message TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'unread',
+        ip_address TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_contact_submissions_status ON contact_submissions (status);
+      CREATE INDEX IF NOT EXISTS idx_contact_submissions_created ON contact_submissions (created_at);
+    `,
+  },
 ];

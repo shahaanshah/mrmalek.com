@@ -327,6 +327,21 @@ async function run() {
       sort_order INT NOT NULL DEFAULT 0,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS contact_submissions (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      phone VARCHAR(100) NULL,
+      topic VARCHAR(255) NULL,
+      message LONGTEXT NOT NULL,
+      status VARCHAR(32) NOT NULL DEFAULT 'unread',
+      ip_address VARCHAR(100) NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_contact_sub_status (status),
+      INDEX idx_contact_sub_created (created_at)
     )`
   ];
 

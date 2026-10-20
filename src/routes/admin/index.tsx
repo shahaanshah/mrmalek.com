@@ -7,6 +7,7 @@ import {
   History,
   Home,
   Image as ImageIcon,
+  Mail,
   Palette,
   Plus,
   Rocket,
@@ -123,7 +124,7 @@ function DashboardPage() {
       </div>
 
       {/* Global Status Summary */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="flex items-center gap-3 p-5">
             <CheckCircle2 className="size-5 text-emerald-500" />
@@ -149,6 +150,28 @@ function DashboardPage() {
               <p className="text-2xl font-semibold">{overview.mediaCount}</p>
               <p className="text-sm text-muted-foreground">Media files uploaded</p>
             </div>
+          </CardContent>
+        </Card>
+        <Card className={overview.inquiries?.unread ? 'border-emerald-500/40 bg-emerald-950/10' : ''}>
+          <CardContent className="flex items-center justify-between p-5">
+            <div className="flex items-center gap-3">
+              <Mail className={`size-5 ${overview.inquiries?.unread ? 'text-emerald-400' : 'text-primary'}`} />
+              <div>
+                <p className={`text-2xl font-semibold ${overview.inquiries?.unread ? 'text-emerald-400' : ''}`}>
+                  {overview.inquiries?.total ?? 0}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {overview.inquiries?.unread
+                    ? `${overview.inquiries.unread} unread message${overview.inquiries.unread === 1 ? '' : 's'}`
+                    : 'Client inquiries'}
+                </p>
+              </div>
+            </div>
+            <Button asChild size="sm" variant={overview.inquiries?.unread ? 'default' : 'outline'} className="text-xs h-7 px-2.5">
+              <Link to="/admin/inquiries">
+                View
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

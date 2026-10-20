@@ -22,6 +22,7 @@ export const HOMEPAGE_KEYS = [
   "process_title",
   "process_highlight",
   "process_subtitle",
+  "process_image",
   "ventures_kicker",
   "ventures_title",
   "ventures_highlight",
@@ -88,6 +89,7 @@ export const HOMEPAGE_DEFAULTS: HomepageContent = {
   process_title: "From idea to",
   process_highlight: "shipped product.",
   process_subtitle: "A simple, repeatable path: understand, design, build, and improve.",
+  process_image: "/images/malek-side-potrait.png",
   ventures_kicker: "SIDE VENTURES",
   ventures_title: "Outside",
   ventures_highlight: "Client Work",
@@ -208,6 +210,12 @@ export const HOMEPAGE_GROUPS: HomepageGroup[] = [
       { key: "process_title", label: "Heading", kind: "text" },
       { key: "process_highlight", label: "Highlighted words", kind: "text" },
       { key: "process_subtitle", label: "Supporting line", kind: "textarea" },
+      {
+        key: "process_image",
+        label: "Visual graphic / photo URL",
+        kind: "text",
+        help: "Photo or diagram displayed beside the 4 delivery phases.",
+      },
     ],
   },
   {

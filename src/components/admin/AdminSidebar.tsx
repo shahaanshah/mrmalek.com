@@ -1,6 +1,7 @@
 import { Link, useRouterState } from '@tanstack/react-router';
 import {
   LayoutDashboard,
+  Mail,
   Home,
   Palette,
   Building2,
@@ -46,7 +47,10 @@ interface NavItem {
 const GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: 'Dashboard',
-    items: [{ label: 'Overview', to: '/admin', icon: LayoutDashboard, exact: true }],
+    items: [
+      { label: 'Overview', to: '/admin', icon: LayoutDashboard, exact: true },
+      { label: 'Client Inquiries', to: '/admin/inquiries', icon: Mail },
+    ],
   },
   {
     label: 'Landing Sections',

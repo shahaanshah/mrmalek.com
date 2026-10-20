@@ -1,11 +1,14 @@
 
 import React, { useState } from 'react';
-import { Phone, Mail, MapPin, Send, CheckCircle2, Copy, Sparkles, MessageCircle, Clock } from 'lucide-react';
+import { useServerFn } from '@tanstack/react-start';
+import { toast } from 'sonner';
+import { Phone, Mail, MapPin, Send, CheckCircle2, Copy, Sparkles, MessageCircle, Clock, Loader2 } from 'lucide-react';
 import LinkedIn from '@/components/ui/LinkedInIcon';
 
 import { personalInfo } from '@/data/portfolioData';
 import SectionBadge from '@/components/ui/SectionBadge';
 import type { LandingSection } from '@/lib/cms/sections.types';
+import { submitContactInquiry } from '@/lib/cms/contact.functions';
 
 interface ContactSectionProps {
   settings?: Record<string, string>;
@@ -20,11 +23,13 @@ export default function ContactSection({ settings, section }: ContactSectionProp
   const rawWhatsapp = whatsapp.replace(/[^0-9]/g, '');
   const linkedin = settings?.['social_linkedin'] || 'https://www.linkedin.com/in/malek-hussein/';
 
+  const submitInquiry = useServerFn(submitContactInquiry);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    topic: 'Product Management & Delivery',
+    topic: 'Technical Product Leadership / TPM Role',
     message: '',
   });
   const [submitted, setSubmitted] = useState(false);
@@ -36,14 +41,40 @@ export default function ContactSection({ settings, section }: ContactSectionProp
     setTimeout(() => setCopiedPhone(false), 2500);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email) return;
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ name: '', email: '', phone: '', topic: 'Product Management & Delivery', message: '' });
-    }, 4000);
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+      toast.error('Please fill in your name, email, and message.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await submitInquiry({
+        data: {
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+          topic: formData.topic.trim(),
+          message: formData.message.trim(),
+        },
+      });
+
+      setSubmitted(true);
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        topic: 'Technical Product Leadership / TPM Role',
+        message: '',
+      });
+      toast.success('Your message has been sent successfully!');
+    } catch (err: any) {
+      console.error('Contact submission error:', err);
+      toast.error(err?.message || 'Could not send message right now. Please try again or reach out directly.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const socialLinks = [
@@ -279,9 +310,17 @@ export default function ContactSection({ settings, section }: ContactSectionProp
               <div style={{ padding: '2.5rem 1.5rem', textAlign: 'center', backgroundColor: 'rgba(52, 211, 153, 0.08)', border: '1px solid rgba(52, 211, 153, 0.25)', borderRadius: 'var(--radius-md)' }}>
                 <CheckCircle2 size={40} color="#34d399" style={{ margin: '0 auto 1rem auto', display: 'block' }} />
                 <h4 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#ffffff', marginBottom: '0.35rem' }}>Message Received</h4>
-                <p style={{ fontSize: '0.9375rem', color: 'var(--text-secondary)' }}>
-                  Thank you. I will be in touch shortly.
+                <p style={{ fontSize: '0.9375rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+                  Thank you! Your message has been received. I review all inquiries personally and respond within 24 business hours.
                 </p>
+                <button
+                  type="button"
+                  onClick={() => setSubmitted(false)}
+                  className="btn-secondary"
+                  style={{ fontSize: '0.8125rem', padding: '0.5rem 1rem', cursor: 'pointer' }}
+                >
+                  Send Another Message
+                </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
@@ -328,10 +367,10 @@ export default function ContactSection({ settings, section }: ContactSectionProp
                     onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
                     className="form-select"
                   >
-                    <option value="Product & Project Management">Technical Product Leadership / TPM Role</option>
-                    <option value="Enterprise Delivery & Systems">Enterprise Delivery &amp; Systems Architecture</option>
-                    <option value="Venture Partnership">Venture Partnership (Malekting / Malektness / AI)</option>
-                    <option value="General Consultation">General Discussion / Other</option>
+                    <option value="Technical Product Leadership / TPM Role">Technical Product Leadership / TPM Role</option>
+                    <option value="Enterprise Delivery & Systems Architecture">Enterprise Delivery &amp; Systems Architecture</option>
+                    <option value="Venture Partnership (Malekting / Malektness / AI)">Venture Partnership (Malekting / Malektness / AI)</option>
+                    <option value="General Discussion / Other">General Discussion / Other</option>
                   </select>
                 </div>
 
@@ -347,9 +386,23 @@ export default function ContactSection({ settings, section }: ContactSectionProp
                   />
                 </div>
 
-                <button type="submit" className="btn-primary btn-full" style={{ marginTop: '0.5rem' }}>
-                  <span>Send Message</span>
-                  <Send size={15} />
+                <button
+                  type="submit"
+                  className="btn-primary btn-full"
+                  style={{ marginTop: '0.5rem' }}
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" />
+                      <span>Sending Message...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Send Message</span>
+                      <Send size={15} />
+                    </>
+                  )}
                 </button>
               </form>
             )}

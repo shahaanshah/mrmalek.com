@@ -19,6 +19,7 @@ import { Route as AdminClientsRouteImport } from './routes/admin/clients'
 import { Route as AdminCredentialsRouteImport } from './routes/admin/credentials'
 import { Route as AdminExperienceRouteImport } from './routes/admin/experience'
 import { Route as AdminHomepageRouteImport } from './routes/admin/homepage'
+import { Route as AdminInquiriesRouteImport } from './routes/admin/inquiries'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminMediaRouteImport } from './routes/admin/media'
 import { Route as AdminProjectsRouteImport } from './routes/admin/projects'
@@ -83,6 +84,11 @@ const AdminExperienceRoute = AdminExperienceRouteImport.update({
 const AdminHomepageRoute = AdminHomepageRouteImport.update({
   id: '/homepage',
   path: '/homepage',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminInquiriesRoute = AdminInquiriesRouteImport.update({
+  id: '/inquiries',
+  path: '/inquiries',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
@@ -171,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/admin/credentials': typeof AdminCredentialsRoute
   '/admin/experience': typeof AdminExperienceRoute
   '/admin/homepage': typeof AdminHomepageRoute
+  '/admin/inquiries': typeof AdminInquiriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/projects': typeof AdminProjectsRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/admin/credentials': typeof AdminCredentialsRoute
   '/admin/experience': typeof AdminExperienceRoute
   '/admin/homepage': typeof AdminHomepageRoute
+  '/admin/inquiries': typeof AdminInquiriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/projects': typeof AdminProjectsRoute
@@ -225,6 +233,7 @@ export interface FileRoutesById {
   '/admin/credentials': typeof AdminCredentialsRoute
   '/admin/experience': typeof AdminExperienceRoute
   '/admin/homepage': typeof AdminHomepageRoute
+  '/admin/inquiries': typeof AdminInquiriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/projects': typeof AdminProjectsRoute
@@ -254,6 +263,7 @@ export interface FileRouteTypes {
     | '/admin/credentials'
     | '/admin/experience'
     | '/admin/homepage'
+    | '/admin/inquiries'
     | '/admin/login'
     | '/admin/media'
     | '/admin/projects'
@@ -280,6 +290,7 @@ export interface FileRouteTypes {
     | '/admin/credentials'
     | '/admin/experience'
     | '/admin/homepage'
+    | '/admin/inquiries'
     | '/admin/login'
     | '/admin/media'
     | '/admin/projects'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/admin/credentials'
     | '/admin/experience'
     | '/admin/homepage'
+    | '/admin/inquiries'
     | '/admin/login'
     | '/admin/media'
     | '/admin/projects'
@@ -400,6 +412,13 @@ declare module '@tanstack/react-router' {
       path: '/homepage'
       fullPath: '/admin/homepage'
       preLoaderRoute: typeof AdminHomepageRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/inquiries': {
+      id: '/admin/inquiries'
+      path: '/inquiries'
+      fullPath: '/admin/inquiries'
+      preLoaderRoute: typeof AdminInquiriesRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/login': {
@@ -518,6 +537,7 @@ interface AdminRouteRouteChildren {
   AdminCredentialsRoute: typeof AdminCredentialsRoute
   AdminExperienceRoute: typeof AdminExperienceRoute
   AdminHomepageRoute: typeof AdminHomepageRoute
+  AdminInquiriesRoute: typeof AdminInquiriesRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminMediaRoute: typeof AdminMediaRoute
   AdminProjectsRoute: typeof AdminProjectsRoute
@@ -544,6 +564,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminCredentialsRoute: AdminCredentialsRoute,
   AdminExperienceRoute: AdminExperienceRoute,
   AdminHomepageRoute: AdminHomepageRoute,
+  AdminInquiriesRoute: AdminInquiriesRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminMediaRoute: AdminMediaRoute,
   AdminProjectsRoute: AdminProjectsRoute,

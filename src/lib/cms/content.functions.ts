@@ -223,18 +223,26 @@ export const adminSetContentFeatured = createServerFn({ method: 'POST' })
 
 export const adminOverview = createServerFn({ method: 'GET' }).handler(async () => {
   await requireAdmin();
-  const [{ contentRepository }, { videoRepository }, { mediaRepository }, { activityRepository }] = await Promise.all([
+  const [
+    { contentRepository },
+    { videoRepository },
+    { mediaRepository },
+    { activityRepository },
+    { contactRepository },
+  ] = await Promise.all([
     import('@/server/repositories/contentRepository.server'),
     import('@/server/repositories/videoRepository.server'),
     import('@/server/repositories/mediaRepository.server'),
     import('@/server/repositories/activityRepository.server'),
+    import('@/server/repositories/contactRepository.server'),
   ]);
-  const [counts, videoStats, recent, media, activity] = await Promise.all([
+  const [counts, videoStats, recent, media, activity, inquiries] = await Promise.all([
     contentRepository.countsByType(),
     videoRepository.stats(),
     contentRepository.recent(6),
     mediaRepository.list(),
     activityRepository.list(6),
+    contactRepository.stats(),
   ]);
   return {
     counts,
@@ -248,6 +256,7 @@ export const adminOverview = createServerFn({ method: 'GET' }).handler(async () 
     })),
     mediaCount: media.length,
     activity,
+    inquiries,
   };
 });
 

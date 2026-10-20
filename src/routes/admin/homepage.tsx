@@ -215,6 +215,28 @@ function HomepagePage() {
           </CardContent>
         </Card>
 
+        {/* HOW I WORK SECTION VISUAL IMAGE */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ImageIcon className="size-5 text-primary" /> How I Work Section Graphic / Portrait
+            </CardTitle>
+            <CardDescription>
+              The visual illustration or portrait shown on the right side of the &ldquo;How I Work&rdquo; (4 delivery phases) section.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="max-w-xl">
+            <ImageUploader
+              id="process_image"
+              label="Process Visual Graphic / Portrait"
+              value={formValues.process_image || '/images/malek-side-potrait.png'}
+              onChange={(url) => updateField('process_image', url)}
+              help="Default is /images/malek-side-potrait.png. Recommended: Transparent PNG or high-res graphic."
+              mediaLibraryItems={mediaItems}
+            />
+          </CardContent>
+        </Card>
+
         {/* STRUCTURED 4 HERO METRICS HIGHLIGHTS */}
         <Card>
           <CardHeader>

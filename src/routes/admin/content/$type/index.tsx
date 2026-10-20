@@ -1,21 +1,25 @@
 import * as React from 'react';
 import { createFileRoute, Link, notFound, useRouter } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
-import { Copy, ExternalLink, Pencil, Plus, Star, Trash2 } from 'lucide-react';
+import { Copy, ExternalLink, Image as ImageIcon, Pencil, Plus, Save, Star, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminLayout from '@/components/admin/AdminLayout';
 import DataTable, { type Column } from '@/components/admin/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import ConfirmDelete from '@/components/admin/ConfirmDelete';
+import ImageUploader from '@/components/admin/ImageUploader';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { requireAdminSession } from '@/lib/cms/admin.functions';
 import {
   adminDeleteContent,
   adminDuplicateContent,
   adminBulkContent,
   adminListContent,
+  adminListMedia,
   adminSetContentFeatured,
   adminSetContentStatus,
 } from '@/lib/cms/content.functions';
+import { adminGetHomepage, adminSaveHomepage } from '@/lib/cms/homepage.functions';
 import { CONTENT_TYPE_CONFIG, type ContentRecord } from '@/lib/cms/content.types';
 import { typeFromSlug } from '@/lib/cms/content.routes';
 import { formatDate } from '@/lib/cms/types';
@@ -23,14 +27,39 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 
 function ContentListPage() {
-  const { session, items, config, typeSlug } = Route.useLoaderData();
+  const { session, items, config, typeSlug, homepageContent, mediaItems } = Route.useLoaderData();
   const router = useRouter();
   const setStatus = useServerFn(adminSetContentStatus);
   const setFeatured = useServerFn(adminSetContentFeatured);
   const remove = useServerFn(adminDeleteContent);
   const duplicate = useServerFn(adminDuplicateContent);
   const bulk = useServerFn(adminBulkContent);
+  const saveHomepage = useServerFn(adminSaveHomepage);
   const [busy, setBusy] = React.useState(false);
+
+  const [processImage, setProcessImage] = React.useState<string>(
+    homepageContent?.process_image || '/images/malek-side-potrait.png',
+  );
+  const [savingImage, setSavingImage] = React.useState(false);
+
+  React.useEffect(() => {
+    if (homepageContent?.process_image) {
+      setProcessImage(homepageContent.process_image);
+    }
+  }, [homepageContent?.process_image]);
+
+  async function handleSaveProcessImage() {
+    setSavingImage(true);
+    try {
+      await saveHomepage({ data: { ...homepageContent, process_image: processImage } });
+      await router.invalidate();
+      toast.success('Section graphic saved successfully!');
+    } catch {
+      toast.error('Could not save section graphic.');
+    } finally {
+      setSavingImage(false);
+    }
+  }
 
   async function run(action: () => Promise<unknown>, message: string) {
     setBusy(true);
@@ -179,6 +208,41 @@ function ContentListPage() {
         </div>
       }
     >
+      {typeSlug === 'frameworks' && (
+        <Card className="mb-6 border-primary/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ImageIcon className="size-4 text-primary" /> How I Work Section Graphic / Portrait
+            </CardTitle>
+            <CardDescription className="text-xs">
+              The visual illustration or portrait shown on the right side of the &ldquo;How I Work&rdquo; (4 delivery phases) section.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="max-w-xl">
+              <ImageUploader
+                id="process_section_image"
+                label="Process Visual Graphic / Portrait"
+                value={processImage}
+                onChange={setProcessImage}
+                help="Recommended: Transparent PNG or high-res graphic. Default: /images/malek-side-potrait.png"
+                mediaLibraryItems={mediaItems}
+              />
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              disabled={savingImage || processImage === (homepageContent?.process_image || '/images/malek-side-potrait.png')}
+              onClick={handleSaveProcessImage}
+              className="gap-1.5"
+            >
+              <Save className="size-3.5" />
+              {savingImage ? 'Saving...' : 'Save Section Graphic'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <DataTable
         rows={items}
         columns={columns}
@@ -211,7 +275,14 @@ export const Route = createFileRoute('/admin/content/$type/')({
     const type = typeFromSlug(params.type);
     if (!type) throw notFound();
     const [session, items] = await Promise.all([requireAdminSession(), adminListContent({ data: { type } })]);
-    return { session, items, config: CONTENT_TYPE_CONFIG[type], typeSlug: params.type };
+    let homepageContent = null;
+    let mediaItems: any[] = [];
+    if (params.type === 'frameworks') {
+      const [home, media] = await Promise.all([adminGetHomepage(), adminListMedia()]);
+      homepageContent = home;
+      mediaItems = media;
+    }
+    return { session, items, config: CONTENT_TYPE_CONFIG[type], typeSlug: params.type, homepageContent, mediaItems };
   },
   head: () => ({
     meta: [{ title: 'Content | Content Studio' }, { name: 'robots', content: 'noindex, nofollow' }],

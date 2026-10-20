@@ -81,20 +81,13 @@ export default function ProcessSection({ content, phases, section }: ProcessSect
           <div className="process-visual__index" aria-hidden="true">01—04</div>
           <div className="process-visual__line" aria-hidden="true" />
           <Image
-            src="/images/malek-side-potrait.png"
+            src={copy.process_image || '/images/malek-side-potrait.png'}
             alt="Malek Hussein presenting his product delivery framework"
             fill
             sizes="(max-width: 900px) 92vw, 48vw"
             style={{ objectFit: 'contain', objectPosition: 'center bottom' }}
             priority
           />
-          <figcaption>
-            <span>Clarity</span>
-            <i aria-hidden="true" />
-            <span>Momentum</span>
-            <i aria-hidden="true" />
-            <span>Scale</span>
-          </figcaption>
         </figure>
       </div>
     </section>
