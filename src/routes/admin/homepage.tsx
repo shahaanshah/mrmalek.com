@@ -219,19 +219,27 @@ function HomepagePage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ImageIcon className="size-5 text-primary" /> How I Work Section Graphic / Portrait
+              <ImageIcon className="size-5 text-primary" /> How I Work Section Images & Visuals
             </CardTitle>
             <CardDescription>
-              The visual illustration or portrait shown on the right side of the &ldquo;How I Work&rdquo; (4 delivery phases) section.
+              Malek&rsquo;s portrait inside the hexagon frame and the cosmic nebula background behind the section.
             </CardDescription>
           </CardHeader>
-          <CardContent className="max-w-xl">
+          <CardContent className="grid gap-6 md:grid-cols-2">
             <ImageUploader
               id="process_image"
-              label="Process Visual Graphic / Portrait"
+              label="Portrait / Cutout Image"
               value={formValues.process_image || '/images/malek-side-potrait.png'}
               onChange={(url) => updateField('process_image', url)}
-              help="Default is /images/malek-side-potrait.png. Recommended: Transparent PNG or high-res graphic."
+              help="Default: /images/malek-side-potrait.png. Transparent PNG recommended."
+              mediaLibraryItems={mediaItems}
+            />
+            <ImageUploader
+              id="process_bg_image"
+              label="Cosmic Nebula Background"
+              value={formValues.process_bg_image || '/images/process-nebula-bg.jpg'}
+              onChange={(url) => updateField('process_bg_image', url)}
+              help="Default: /images/process-nebula-bg.jpg. Space nebula backdrop."
               mediaLibraryItems={mediaItems}
             />
           </CardContent>

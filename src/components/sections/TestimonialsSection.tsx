@@ -233,8 +233,61 @@ export default function TestimonialsSection({
                       &ldquo;{item.quote}&rdquo;
                     </p>
 
-                    {/* Author */}
+                    {/* Author Avatar + Details */}
                     <div>
+                      {/* Avatar Photo / Initials */}
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.15rem' }}>
+                        {item.avatar_url ? (
+                          <div
+                            style={{
+                              width: '64px',
+                              height: '64px',
+                              borderRadius: '50%',
+                              padding: '2.5px',
+                              background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                              boxShadow: '0 0 20px rgba(168, 85, 247, 0.35)',
+                            }}
+                          >
+                            <img
+                              src={item.avatar_url}
+                              alt={item.author}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                borderRadius: '50%',
+                                objectFit: 'cover',
+                                display: 'block',
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            style={{
+                              width: '58px',
+                              height: '58px',
+                              borderRadius: '50%',
+                              background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(6, 182, 212, 0.15))',
+                              border: '1.5px solid rgba(168, 85, 247, 0.4)',
+                              color: 'var(--accent-purple-light)',
+                              fontWeight: 800,
+                              fontSize: '1rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontFamily: 'var(--font-heading)',
+                              boxShadow: '0 0 15px rgba(168, 85, 247, 0.2)',
+                            }}
+                          >
+                            {item.author
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')
+                              .slice(0, 2)
+                              .toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+
                       <div
                         style={{
                           fontFamily: 'var(--font-heading)',

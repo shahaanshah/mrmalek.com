@@ -40,22 +40,34 @@ function ContentListPage() {
   const [processImage, setProcessImage] = React.useState<string>(
     homepageContent?.process_image || '/images/malek-side-potrait.png',
   );
+  const [processBgImage, setProcessBgImage] = React.useState<string>(
+    homepageContent?.process_bg_image || '/images/process-nebula-bg.jpg',
+  );
   const [savingImage, setSavingImage] = React.useState(false);
 
   React.useEffect(() => {
     if (homepageContent?.process_image) {
       setProcessImage(homepageContent.process_image);
     }
-  }, [homepageContent?.process_image]);
+    if (homepageContent?.process_bg_image) {
+      setProcessBgImage(homepageContent.process_bg_image);
+    }
+  }, [homepageContent?.process_image, homepageContent?.process_bg_image]);
 
-  async function handleSaveProcessImage() {
+  async function handleSaveProcessImages() {
     setSavingImage(true);
     try {
-      await saveHomepage({ data: { ...homepageContent, process_image: processImage } });
+      await saveHomepage({
+        data: {
+          ...homepageContent,
+          process_image: processImage,
+          process_bg_image: processBgImage,
+        },
+      });
       await router.invalidate();
-      toast.success('Section graphic saved successfully!');
+      toast.success('Section visuals saved successfully!');
     } catch {
-      toast.error('Could not save section graphic.');
+      toast.error('Could not save section visuals.');
     } finally {
       setSavingImage(false);
     }
@@ -212,32 +224,44 @@ function ContentListPage() {
         <Card className="mb-6 border-primary/20">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <ImageIcon className="size-4 text-primary" /> How I Work Section Graphic / Portrait
+              <ImageIcon className="size-4 text-primary" /> How I Work Section Images & Visuals
             </CardTitle>
             <CardDescription className="text-xs">
-              The visual illustration or portrait shown on the right side of the &ldquo;How I Work&rdquo; (4 delivery phases) section.
+              Malek&rsquo;s portrait inside the hexagon frame and the cosmic nebula background behind the section.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="max-w-xl">
+            <div className="grid gap-6 md:grid-cols-2">
               <ImageUploader
                 id="process_section_image"
-                label="Process Visual Graphic / Portrait"
+                label="Process Portrait / Graphic"
                 value={processImage}
                 onChange={setProcessImage}
-                help="Recommended: Transparent PNG or high-res graphic. Default: /images/malek-side-potrait.png"
+                help="Recommended: Transparent PNG. Default: /images/malek-side-potrait.png"
+                mediaLibraryItems={mediaItems}
+              />
+              <ImageUploader
+                id="process_section_bg_image"
+                label="Cosmic Nebula Background"
+                value={processBgImage}
+                onChange={setProcessBgImage}
+                help="Recommended: Cosmic nebula image. Default: /images/process-nebula-bg.jpg"
                 mediaLibraryItems={mediaItems}
               />
             </div>
             <Button
               type="button"
               size="sm"
-              disabled={savingImage || processImage === (homepageContent?.process_image || '/images/malek-side-potrait.png')}
-              onClick={handleSaveProcessImage}
+              disabled={
+                savingImage ||
+                (processImage === (homepageContent?.process_image || '/images/malek-side-potrait.png') &&
+                  processBgImage === (homepageContent?.process_bg_image || '/images/process-nebula-bg.jpg'))
+              }
+              onClick={handleSaveProcessImages}
               className="gap-1.5"
             >
               <Save className="size-3.5" />
-              {savingImage ? 'Saving...' : 'Save Section Graphic'}
+              {savingImage ? 'Saving...' : 'Save Section Visuals'}
             </Button>
           </CardContent>
         </Card>

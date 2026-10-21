@@ -85,8 +85,9 @@ export default function InsightsSection({ videos, topics = [], content, section 
   return (
     <section
       id="insights"
-      className="section-padding relative"
+      className="section-wrapper relative insights-section"
       style={{
+        paddingTop: '6.5rem',
         background: 'radial-gradient(ellipse at 50% 0%, rgba(124, 58, 237, 0.07) 0%, transparent 65%)',
         scrollMarginTop: '80px',
       }}
